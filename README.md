@@ -1,5 +1,10 @@
 # swift-fixtures
 
+![CI](https://github.com/gibachan/swift-fixtures/workflows/CI/badge.svg)
+![Swift 5.9+](https://img.shields.io/badge/Swift-5.9%2B-orange.svg)
+![SPM Compatible](https://img.shields.io/badge/SPM-compatible-brightgreen.svg)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
+
 A Swift package that simplifies unit test writing by providing fixtures for Swift value types through a macro system.
 
 ## Motivation
