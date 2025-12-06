@@ -39,6 +39,12 @@ let package = Package(
     .testTarget(
       name: "FixturesTests",
       dependencies: [
+        "Fixtures",
+      ]
+    ),
+    .testTarget(
+      name: "FixturesMacrosTests",
+      dependencies: [
         "FixturesMacros",
         .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
       ]
