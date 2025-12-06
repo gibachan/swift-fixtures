@@ -75,7 +75,7 @@ extension Optional: Fixtureable {
 @attached(
   extension,
   conformances: Fixtureable,
-  names: named(init), named(fixture)
+  names: named(init), named(fixture), named(FixtureBuilder)
 )
 public macro Fixture() = #externalMacro(
   module: "FixturesMacros",

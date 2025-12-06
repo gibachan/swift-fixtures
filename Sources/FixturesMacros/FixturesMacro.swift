@@ -66,6 +66,8 @@ private extension FixtureMacro {
           members: MemberBlockItemListSyntax {
             MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters))
             MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters))
+            MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters))
+            MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters))
           }
         )
       )
@@ -326,7 +328,7 @@ private extension FixtureMacro {
           expression: createFixtureAccessExpression()
         )
       }
-    
+
     return VariableDeclSyntax(
       modifiers: [
         DeclModifierSyntax(name: .keyword(.public)),
@@ -363,6 +365,151 @@ private extension FixtureMacro {
           )
         )
       }
+    )
+  }
+
+  static func createFixtureBuilderStruct(
+    for parameters: [Parameter]
+  ) -> StructDeclSyntax {
+    let properties = parameters.map { parameter in
+      MemberBlockItemSyntax(
+        decl: VariableDeclSyntax(
+          modifiers: [DeclModifierSyntax(name: .keyword(.public))],
+          bindingSpecifier: .keyword(.var),
+          bindings: PatternBindingListSyntax {
+            PatternBindingSyntax(
+              pattern: IdentifierPatternSyntax(identifier: parameter.identifier),
+              typeAnnotation: TypeAnnotationSyntax(type: parameter.type),
+              initializer: InitializerClauseSyntax(
+                value: createFixtureAccessExpression()
+              )
+            )
+          }
+        )
+      )
+    }
+
+    return StructDeclSyntax(
+      modifiers: [DeclModifierSyntax(name: .keyword(.public))],
+      name: .identifier("FixtureBuilder"),
+      memberBlock: MemberBlockSyntax(
+        members: MemberBlockItemListSyntax {
+          for property in properties {
+            property
+          }
+        }
+      )
+    )
+  }
+
+  static func createClosureBasedFixtureMethod(
+    for parameters: [Parameter]
+  ) -> FunctionDeclSyntax {
+    let arguments = parameters.map { parameter in
+      LabeledExprSyntax(
+        label: .identifier(parameter.fixtureParameterName),
+        colon: .colonToken(),
+        expression: MemberAccessExprSyntax(
+          base: DeclReferenceExprSyntax(baseName: .identifier("builder")),
+          declName: DeclReferenceExprSyntax(baseName: parameter.identifier)
+        )
+      )
+    }
+
+    return FunctionDeclSyntax(
+      modifiers: [
+        DeclModifierSyntax(name: .keyword(.public)),
+        DeclModifierSyntax(name: .keyword(.static))
+      ],
+      name: .identifier("fixture"),
+      signature: FunctionSignatureSyntax(
+        parameterClause: FunctionParameterClauseSyntax(
+          parameters: FunctionParameterListSyntax {
+            FunctionParameterSyntax(
+              firstName: .wildcardToken(),
+              secondName: .identifier("configure"),
+              type: FunctionTypeSyntax(
+                parameters: TupleTypeElementListSyntax {
+                  TupleTypeElementSyntax(
+                    type: AttributedTypeSyntax(
+                      specifiers: TypeSpecifierListSyntax {
+                        SimpleTypeSpecifierSyntax(specifier: .keyword(.inout))
+                      },
+                      baseType: IdentifierTypeSyntax(name: .identifier("FixtureBuilder"))
+                    )
+                  )
+                },
+                returnClause: ReturnClauseSyntax(type: IdentifierTypeSyntax(name: "Void"))
+              )
+            )
+          }
+        ),
+        returnClause: ReturnClauseSyntax(type: IdentifierTypeSyntax(name: "Self"))
+      ),
+      body: CodeBlockSyntax(
+        statements: CodeBlockItemListSyntax {
+          // var builder = FixtureBuilder()
+          CodeBlockItemSyntax(
+            item: .decl(DeclSyntax(
+              VariableDeclSyntax(
+                bindingSpecifier: .keyword(.var),
+                bindings: PatternBindingListSyntax {
+                  PatternBindingSyntax(
+                    pattern: IdentifierPatternSyntax(identifier: .identifier("builder")),
+                    initializer: InitializerClauseSyntax(
+                      value: FunctionCallExprSyntax(
+                        calledExpression: DeclReferenceExprSyntax(baseName: .identifier("FixtureBuilder")),
+                        leftParen: .leftParenToken(),
+                        arguments: LabeledExprListSyntax {},
+                        rightParen: .rightParenToken()
+                      )
+                    )
+                  )
+                }
+              )
+            ))
+          )
+          // configure(&builder)
+          CodeBlockItemSyntax(
+            item: .expr(ExprSyntax(
+              FunctionCallExprSyntax(
+                calledExpression: DeclReferenceExprSyntax(baseName: .identifier("configure")),
+                leftParen: .leftParenToken(),
+                arguments: LabeledExprListSyntax {
+                  LabeledExprSyntax(
+                    expression: PrefixOperatorExprSyntax(
+                      operator: .prefixAmpersandToken(),
+                      expression: DeclReferenceExprSyntax(baseName: .identifier("builder"))
+                    )
+                  )
+                },
+                rightParen: .rightParenToken()
+              )
+            ))
+          )
+          // return Self(fixtureName: builder.name, ...)
+          CodeBlockItemSyntax(
+            item: .stmt(StmtSyntax(
+              ReturnStmtSyntax(
+                expression: FunctionCallExprSyntax(
+                  calledExpression: MemberAccessExprSyntax(
+                    declName: DeclReferenceExprSyntax(
+                      baseName: .keyword(.`init`)
+                    )
+                  ),
+                  leftParen: .leftParenToken(),
+                  arguments: LabeledExprListSyntax {
+                    for argument in arguments {
+                      argument
+                    }
+                  },
+                  rightParen: .rightParenToken()
+                )
+              )
+            ))
+          )
+        }
+      )
     )
   }
 }

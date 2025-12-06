@@ -38,6 +38,13 @@ struct Config {
   let serviceName: String
 }
 
+@Fixture
+struct Person {
+  let name: String
+  var age: Int
+  var email: String
+}
+
 @MainActor
 struct FixtureTests {
   @Test
@@ -123,5 +130,131 @@ struct FixtureTests {
     #expect(customConfig.timeout == 60)
     #expect(customConfig.retryCount == 5)
     #expect(customConfig.serviceName == "custom")
+  }
+
+  @Test
+  func fixtureWithClosure() {
+    // Test with custom struct using closure-based API
+    let customItem = Item.fixture {
+      $0.id = 100
+      $0.name = "Custom Item"
+    }
+    #expect(customItem.id == 100)
+    #expect(customItem.name == "Custom Item")
+
+    // Test customizing only one property
+    let partialItem = Item.fixture {
+      $0.name = "Partial"
+    }
+    #expect(partialItem.id == 1) // Default fixture value
+    #expect(partialItem.name == "Partial")
+  }
+
+  @Test
+  func fixtureWithClosureForLetProperties() {
+    // Test closure-based API for struct with let properties
+    let person = Person.fixture {
+      $0.name = "Alice"
+    }
+    #expect(person.name == "Alice")
+    #expect(person.age == 1) // Default fixture value
+    #expect(person.email == "a") // Default fixture value
+
+    // Test modifying multiple properties including let
+    let customPerson = Person.fixture {
+      $0.name = "Bob"
+      $0.age = 30
+      $0.email = "bob@example.com"
+    }
+    #expect(customPerson.name == "Bob")
+    #expect(customPerson.age == 30)
+    #expect(customPerson.email == "bob@example.com")
+
+    // Test customizing only var properties
+    let anotherPerson = Person.fixture {
+      $0.name = "Charlie"
+      $0.age = 25
+    }
+    #expect(anotherPerson.name == "Charlie")
+    #expect(anotherPerson.age == 25)
+    #expect(anotherPerson.email == "a")
+  }
+
+  @Test
+  func fixtureClosureVariations() {
+    // Test closure with single property override
+    let item1 = Item.fixture {
+      $0.name = "Custom Item"
+    }
+    #expect(item1.id == 1) // Default fixture value
+    #expect(item1.name == "Custom Item")
+
+    // Test closure with multiple property overrides
+    let item2 = Item.fixture {
+      $0.id = 999
+      $0.name = "Special Item"
+    }
+    #expect(item2.id == 999)
+    #expect(item2.name == "Special Item")
+
+    // Test with no customization - use default .fixture
+    let item3 = Item.fixture
+    #expect(item3.id == 1)
+    #expect(item3.name == "a")
+
+    // Test with var properties
+    let person1 = Person.fixture {
+      $0.name = "Dave"
+    }
+    #expect(person1.name == "Dave")
+    #expect(person1.age == 1)
+    #expect(person1.email == "a")
+
+    // Test with struct containing array
+    let team = Team.fixture {
+      $0.name = "Dream Team"
+    }
+    #expect(team.name == "Dream Team")
+    #expect(team.members.count == 3) // Default fixture array
+  }
+
+  @Test
+  func fixtureClosurePattern() {
+    // Test closure pattern - customize only specific properties
+    let item1 = Item.fixture {
+      $0.name = "Custom Item"
+    }
+    #expect(item1.id == 1) // Default
+    #expect(item1.name == "Custom Item")
+
+    // Test closure pattern - customize multiple properties
+    let item2 = Item.fixture {
+      $0.id = 999
+      $0.name = "Special Item"
+    }
+    #expect(item2.id == 999)
+    #expect(item2.name == "Special Item")
+
+    // Test with let properties
+    let item4 = Item.fixture {
+      $0.id = 42
+    }
+    #expect(item4.id == 42)
+    #expect(item4.name == "a") // Default
+
+    // Test closure with nested struct
+    let team = Team.fixture {
+      $0.name = "Dream Team"
+      $0.members = [
+        Item.fixture { $0.id = 1; $0.name = "Alice" },
+        Item.fixture { $0.id = 2; $0.name = "Bob" }
+      ]
+    }
+    #expect(team.name == "Dream Team")
+    #expect(team.members.count == 2)
+    #expect(team.members[0].id == 1)
+    #expect(team.members[0].name == "Alice")
+    #expect(team.members[1].id == 2)
+    #expect(team.members[1].name == "Bob")
   }
 }
