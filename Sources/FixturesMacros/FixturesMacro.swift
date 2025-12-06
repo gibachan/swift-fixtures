@@ -30,8 +30,6 @@ public struct FixtureMacro: ExtensionMacro {
   ) throws -> [ExtensionDeclSyntax] {
     if let structDecl = declaration.as(StructDeclSyntax.self) {
       return processStruct(decl: structDecl, type: type)
-    } else if let classDecl = declaration.as(ClassDeclSyntax.self) {
-      return processClass(decl: classDecl, type: type)
     } else if let enumDecl = declaration.as(EnumDeclSyntax.self) {
       return processEnum(node: node, decl: enumDecl, type: type, context: context)
     } else {
@@ -74,81 +72,6 @@ private extension FixtureMacro {
     ]
   }
   
-  static func processClass(
-    decl: ClassDeclSyntax,
-    type: some TypeSyntaxProtocol
-  ) -> [ExtensionDeclSyntax] {
-    let initializers = decl.memberBlock.members.compactMap { member in
-      member.decl.as(InitializerDeclSyntax.self)
-    }
-    guard let initializer = initializers.first else {
-      return []
-    }
-    
-    let arguments = initializer.signature.parameterClause.parameters.map { parameter in
-      LabeledExprSyntax(
-        label: parameter.firstName,
-        colon: .colonToken(),
-        expression: createFixtureAccessExpression()
-      )
-    }
-    
-    let variableDecl = VariableDeclSyntax(
-      modifiers: [
-        DeclModifierSyntax(name: .keyword(.public)),
-        DeclModifierSyntax(name: .keyword(.static))
-      ],
-      bindingSpecifier: .keyword(.var),
-      bindings: PatternBindingListSyntax {
-        PatternBindingSyntax(
-          pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
-          typeAnnotation: TypeAnnotationSyntax(type: type),
-          accessorBlock: AccessorBlockSyntax(
-            accessors: AccessorBlockSyntax.Accessors(
-              CodeBlockItemListSyntax {
-                CodeBlockItemSyntax(
-                  item: .stmt(
-                    StmtSyntax(
-                      ReturnStmtSyntax(
-                        expression: FunctionCallExprSyntax(
-                          calledExpression: MemberAccessExprSyntax(
-                            declName: DeclReferenceExprSyntax(
-                              baseName: .keyword(.`init`)
-                            )
-                          ),
-                          leftParen: .leftParenToken(),
-                          arguments: LabeledExprListSyntax {
-                            for argument in arguments {
-                              argument
-                            }
-                          },
-                          rightParen: .rightParenToken()
-                        )
-                      )
-                    )
-                  )
-                )
-              }
-            )
-          )
-        )
-      }
-    )
-    
-    return [
-      ExtensionDeclSyntax(
-        extensionKeyword: .keyword(.extension),
-        extendedType: type,
-        memberBlock: MemberBlockSyntax(
-          members: MemberBlockItemListSyntax {
-            MemberBlockItemSyntax(
-              decl: variableDecl
-            )
-          }
-        )
-      )
-    ]
-  }
   
   static func processEnum(
     node: AttributeSyntax,

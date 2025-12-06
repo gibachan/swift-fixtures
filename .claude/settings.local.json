@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(swift --version)",
-      "Bash(swift test:*)"
+      "Bash(swift test:*)",
+      "Bash(swift build)",
+      "Bash(swift run:*)"
     ],
     "deny": [],
     "ask": []

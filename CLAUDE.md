@@ -17,7 +17,7 @@ This is a Swift package that provides fixtures for Swift types through a macro s
 
 1. **Fixtureable Protocol** (`Sources/Fixtures/Fixtures.swift:5-7`): Defines the contract for types that can provide fixtures
 2. **@Fixture Macro** (`Sources/Fixtures/Fixtures.swift:75-83`): Attached extension macro that generates fixture implementations
-3. **FixtureMacro Implementation** (`Sources/FixturesMacros/FixturesMacro.swift:23-40`): Handles struct, class, and enum fixture generation
+3. **FixtureMacro Implementation** (`Sources/FixturesMacros/FixturesMacro.swift:23-40`): Handles struct and enum fixture generation
 4. **Parameter Helper** (`Sources/FixturesMacros/Parameter.swift`): Represents macro expansion parameters
 
 ### Macro Implementation Details
@@ -25,7 +25,6 @@ This is a Swift package that provides fixtures for Swift types through a macro s
 The `@Fixture` macro generates different implementations based on the target type:
 
 - **Structs**: Creates an initializer with `fixture` prefixed parameters and a static `fixture` property
-- **Classes**: Analyzes the first available initializer and creates fixture implementation
 - **Enums**: Uses the first case as the fixture value, handling associated values automatically
 
 ## Common Development Commands

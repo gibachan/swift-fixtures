@@ -36,22 +36,6 @@ enum AccountType {
     case administrator
 }
 
-@Fixture
-class Room {
-    let name: String
-
-    init(name: String) {
-        self.name = name
-    }
-
-    init(fixtureName: String) {  // ⚠️ nameプロパティを初期化していない！
-        self.name = fixtureName  // ❌ コンパイルエラーの可能性
-    }
-
-    init() {
-        self.name = "demo"
-    }
-}
 
 func test() {
     print("=== Basic Fixture Usage ===")
@@ -60,9 +44,6 @@ func test() {
 
     let accountType: AccountType = .fixture
     print("fixture accountType = \(accountType)")
-
-    let room: Room = .fixture
-    print("fixture room = \(room)")
 
     print("\n=== Using closure with direct property access ===")
     // Closure-based approach with direct property access
