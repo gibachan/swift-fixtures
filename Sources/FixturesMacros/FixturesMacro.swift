@@ -8,11 +8,12 @@ import SwiftSyntaxMacros
 
 enum FixtureMacroError: String, DiagnosticMessage {
   case noEnumCases = "Enum must have at least one case to generate fixture"
+  case unsupportedType = "Only structs and enums are supported for @Fixture macro"
 
   var message: String { rawValue }
 
   var diagnosticID: MessageID {
-    MessageID(domain: "StubKitMacroDemo", id: rawValue)
+    MessageID(domain: "swift-fixtures", id: rawValue)
   }
 
   var severity: DiagnosticSeverity { .error }
@@ -33,7 +34,13 @@ public struct FixtureMacro: ExtensionMacro {
     } else if let enumDecl = declaration.as(EnumDeclSyntax.self) {
       return processEnum(node: node, decl: enumDecl, type: type, context: context)
     } else {
-      fatalError("Not supported type")
+      context.diagnose(
+        Diagnostic(
+          node: Syntax(node),
+          message: FixtureMacroError.unsupportedType
+        )
+      )
+      return []
     }
   }
 }
