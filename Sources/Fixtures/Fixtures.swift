@@ -2,7 +2,12 @@ import Foundation
 
 // MARK: - Fixtureable Protocol
 
+/// A protocol that provides fixture values for types.
+///
+/// Types conforming to `Fixtureable` can provide a default fixture value
+/// that can be used in tests and other scenarios where a sample instance is needed.
 public protocol Fixtureable {
+  /// A default fixture value for this type.
   static var fixture: Self { get }
 }
 
@@ -35,6 +40,34 @@ extension UInt: Fixtureable {
 }
 
 extension UInt8: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension UInt16: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension UInt32: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension UInt64: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension Int8: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension Int16: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension Int32: Fixtureable {
+  public static var fixture: Self { 1 }
+}
+
+extension Int64: Fixtureable {
   public static var fixture: Self { 1 }
 }
 
@@ -72,6 +105,32 @@ extension Optional: Fixtureable {
 
 // MARK: - Macro Definition
 
+/// A macro that generates fixture support for structs and enums.
+///
+/// The `@Fixture` macro automatically generates:
+/// - Conformance to the `Fixtureable` protocol
+/// - A static `fixture` property that returns a sample instance
+/// - A fixture initializer with `fixture` prefixed parameters
+/// - A `FixtureBuilder` struct for customizable fixture creation
+/// - A closure-based `fixture` method for property customization
+///
+/// ## Usage
+///
+/// ```swift
+/// @Fixture
+/// struct User {
+///   let name: String
+///   var age: Int
+/// }
+///
+/// let user = User.fixture
+/// let customUser = User.fixture { $0.name = "Alice" }
+/// ```
+///
+/// ## Supported Types
+/// - ✅ Structs: Full fixture generation with builder pattern
+/// - ✅ Enums: Uses first case as fixture value, handles associated values
+/// - ❌ Classes: Not supported (value types only)
 @attached(
   extension,
   conformances: Fixtureable,
