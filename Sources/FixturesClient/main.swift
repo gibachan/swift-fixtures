@@ -1,4 +1,4 @@
-import swift_fixtures
+import Fixtures
 
 let a = 17
 let b = 25
