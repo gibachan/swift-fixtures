@@ -4,7 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Swift package that provides fixtures for Swift types through a macro system. It consists of:
+This is a Swift package that simplifies unit test writing by providing fixtures for Swift types through a macro system.
+
+### Purpose
+
+The library aims to simplify unit test writing by:
+- Reducing boilerplate code for creating test objects
+- Allowing developers to focus on testing logic rather than object creation
+- Providing consistent fixture generation for value types (structs and enums)
+- Making test data creation simple with `.fixture` syntax
+
+### Components
+
+It consists of:
 
 - **Fixtures Library** (`Sources/Fixtures/`): Core protocol and built-in type extensions
 - **FixturesMacros** (`Sources/FixturesMacros/`): Compiler plugin that implements the `@Fixture` macro
