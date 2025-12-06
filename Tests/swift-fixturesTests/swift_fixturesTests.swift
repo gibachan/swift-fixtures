@@ -9,40 +9,40 @@ import XCTest
 import swift_fixturesMacros
 
 let testMacros: [String: Macro.Type] = [
-    "stringify": StringifyMacro.self,
+  "stringify": StringifyMacro.self,
 ]
 #endif
 
 final class swift_fixturesTests: XCTestCase {
-    func testMacro() throws {
-        #if canImport(swift_fixturesMacros)
-        assertMacroExpansion(
-            """
-            #stringify(a + b)
-            """,
-            expandedSource: """
-            (a + b, "a + b")
-            """,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
-    }
+  func testMacro() throws {
+#if canImport(swift_fixturesMacros)
+    assertMacroExpansion(
+      """
+      #stringify(a + b)
+      """,
+      expandedSource: """
+      (a + b, "a + b")
+      """,
+      macros: testMacros
+    )
+#else
+    throw XCTSkip("macros are only supported when running tests for the host platform")
+#endif
+  }
 
-    func testMacroWithStringLiteral() throws {
-        #if canImport(swift_fixturesMacros)
-        assertMacroExpansion(
-            #"""
-            #stringify("Hello, \(name)")
-            """#,
-            expandedSource: #"""
-            ("Hello, \(name)", #""Hello, \(name)""#)
-            """#,
-            macros: testMacros
-        )
-        #else
-        throw XCTSkip("macros are only supported when running tests for the host platform")
-        #endif
-    }
+  func testMacroWithStringLiteral() throws {
+#if canImport(swift_fixturesMacros)
+    assertMacroExpansion(
+      #"""
+      #stringify("Hello, \(name)")
+      """#,
+      expandedSource: #"""
+      ("Hello, \(name)", #""Hello, \(name)""#)
+      """#,
+      macros: testMacros
+    )
+#else
+    throw XCTSkip("macros are only supported when running tests for the host platform")
+#endif
+  }
 }
