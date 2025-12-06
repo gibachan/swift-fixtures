@@ -1,10 +1,9 @@
+import FixturesMacros
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
-import FixturesMacros
 
 final class StructTests: XCTestCase {
   func testStruct() throws {
@@ -18,33 +17,33 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct User {
-          let id: String
-          let age: Int
-          let isRich: Bool
-      }
+        struct User {
+            let id: String
+            let age: Int
+            let isRich: Bool
+        }
 
-      extension User: Fixtureable {
-          init(fixtureid: String, fixtureage: Int, fixtureisRich: Bool) {
-              id = fixtureid
-              age = fixtureage
-              isRich = fixtureisRich
-          }
-          public static var fixture: Self {
-              .init(fixtureid: .fixture, fixtureage: .fixture, fixtureisRich: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var id: String = .fixture
-              public var age: Int = .fixture
-              public var isRich: Bool = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixtureid: builder.id, fixtureage: builder.age, fixtureisRich: builder.isRich)
-          }
-      }
-      """,
+        extension User: Fixtureable {
+            init(fixtureid: String, fixtureage: Int, fixtureisRich: Bool) {
+                id = fixtureid
+                age = fixtureage
+                isRich = fixtureisRich
+            }
+            public static var fixture: Self {
+                .init(fixtureid: .fixture, fixtureage: .fixture, fixtureisRich: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var id: String = .fixture
+                public var age: Int = .fixture
+                public var isRich: Bool = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureid: builder.id, fixtureage: builder.age, fixtureisRich: builder.isRich)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -59,7 +58,7 @@ final class StructTests: XCTestCase {
       struct User {
           let id: String
           var vehicle: Vehicle
-      
+
           @Fixture
           struct Money {
               var yen: Int
@@ -68,73 +67,73 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct Vehicle {
-          let name: String
-      }
-      struct User {
-          let id: String
-          var vehicle: Vehicle
-          struct Money {
-              var yen: Int
-          }
-          var money: Money
-      }
+        struct Vehicle {
+            let name: String
+        }
+        struct User {
+            let id: String
+            var vehicle: Vehicle
+            struct Money {
+                var yen: Int
+            }
+            var money: Money
+        }
 
-      extension Vehicle: Fixtureable {
-          init(fixturename: String) {
-              name = fixturename
-          }
-          public static var fixture: Self {
-              .init(fixturename: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var name: String = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixturename: builder.name)
-          }
-      }
+        extension Vehicle: Fixtureable {
+            init(fixturename: String) {
+                name = fixturename
+            }
+            public static var fixture: Self {
+                .init(fixturename: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var name: String = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturename: builder.name)
+            }
+        }
 
-      extension User.Money: Fixtureable {
-          init(fixtureyen: Int) {
-              yen = fixtureyen
-          }
-          public static var fixture: Self {
-              .init(fixtureyen: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var yen: Int = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixtureyen: builder.yen)
-          }
-      }
+        extension User.Money: Fixtureable {
+            init(fixtureyen: Int) {
+                yen = fixtureyen
+            }
+            public static var fixture: Self {
+                .init(fixtureyen: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var yen: Int = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureyen: builder.yen)
+            }
+        }
 
-      extension User: Fixtureable {
-          init(fixtureid: String, fixturevehicle: Vehicle, fixturemoney: Money) {
-              id = fixtureid
-              vehicle = fixturevehicle
-              money = fixturemoney
-          }
-          public static var fixture: Self {
-              .init(fixtureid: .fixture, fixturevehicle: .fixture, fixturemoney: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var id: String = .fixture
-              public var vehicle: Vehicle = .fixture
-              public var money: Money = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixtureid: builder.id, fixturevehicle: builder.vehicle, fixturemoney: builder.money)
-          }
-      }
-      """,
+        extension User: Fixtureable {
+            init(fixtureid: String, fixturevehicle: Vehicle, fixturemoney: Money) {
+                id = fixtureid
+                vehicle = fixturevehicle
+                money = fixturemoney
+            }
+            public static var fixture: Self {
+                .init(fixtureid: .fixture, fixturevehicle: .fixture, fixturemoney: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var id: String = .fixture
+                public var vehicle: Vehicle = .fixture
+                public var money: Money = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureid: builder.id, fixturevehicle: builder.vehicle, fixturemoney: builder.money)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -152,33 +151,33 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct User {
-          let firstName: String
-          let lastName: String
-          var fullName: String {
-              "\\(firstName) \\(lastName)"
-          }
-      }
+        struct User {
+            let firstName: String
+            let lastName: String
+            var fullName: String {
+                "\\(firstName) \\(lastName)"
+            }
+        }
 
-      extension User: Fixtureable {
-          init(fixturefirstName: String, fixturelastName: String) {
-              firstName = fixturefirstName
-              lastName = fixturelastName
-          }
-          public static var fixture: Self {
-              .init(fixturefirstName: .fixture, fixturelastName: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var firstName: String = .fixture
-              public var lastName: String = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixturefirstName: builder.firstName, fixturelastName: builder.lastName)
-          }
-      }
-      """,
+        extension User: Fixtureable {
+            init(fixturefirstName: String, fixturelastName: String) {
+                firstName = fixturefirstName
+                lastName = fixturelastName
+            }
+            public static var fixture: Self {
+                .init(fixturefirstName: .fixture, fixturelastName: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var firstName: String = .fixture
+                public var lastName: String = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturefirstName: builder.firstName, fixturelastName: builder.lastName)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -196,29 +195,29 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct Counter {
-          var count: Int {
-              didSet {
-                  print("Changed")
-              }
-          }
-      }
+        struct Counter {
+            var count: Int {
+                didSet {
+                    print("Changed")
+                }
+            }
+        }
 
-      extension Counter: Fixtureable {
-          init() {
-          }
-          public static var fixture: Self {
-              .init()
-          }
-          public struct FixtureBuilder {
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init()
-          }
-      }
-      """,
+        extension Counter: Fixtureable {
+            init() {
+            }
+            public static var fixture: Self {
+                .init()
+            }
+            public struct FixtureBuilder {
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init()
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -234,33 +233,33 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct User {
-          let name: String
-          let nickname: String?
-          let age: Int?
-      }
+        struct User {
+            let name: String
+            let nickname: String?
+            let age: Int?
+        }
 
-      extension User: Fixtureable {
-          init(fixturename: String, fixturenickname: String?, fixtureage: Int?) {
-              name = fixturename
-              nickname = fixturenickname
-              age = fixtureage
-          }
-          public static var fixture: Self {
-              .init(fixturename: .fixture, fixturenickname: .fixture, fixtureage: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var name: String = .fixture
-              public var nickname: String? = .fixture
-              public var age: Int? = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixturename: builder.name, fixturenickname: builder.nickname, fixtureage: builder.age)
-          }
-      }
-      """,
+        extension User: Fixtureable {
+            init(fixturename: String, fixturenickname: String?, fixtureage: Int?) {
+                name = fixturename
+                nickname = fixturenickname
+                age = fixtureage
+            }
+            public static var fixture: Self {
+                .init(fixturename: .fixture, fixturenickname: .fixture, fixtureage: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var name: String = .fixture
+                public var nickname: String? = .fixture
+                public var age: Int? = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturename: builder.name, fixturenickname: builder.nickname, fixtureage: builder.age)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -279,65 +278,65 @@ final class StructTests: XCTestCase {
       }
       """,
       expandedSource: """
-      struct Item {
-          let name: String
-      }
-      struct Team {
-          let name: String
-          let members: [Item]
-      }
+        struct Item {
+            let name: String
+        }
+        struct Team {
+            let name: String
+            let members: [Item]
+        }
 
-      extension Item: Fixtureable {
-          init(fixturename: String) {
-              name = fixturename
-          }
-          public static var fixture: Self {
-              .init(fixturename: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var name: String = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixturename: builder.name)
-          }
-      }
+        extension Item: Fixtureable {
+            init(fixturename: String) {
+                name = fixturename
+            }
+            public static var fixture: Self {
+                .init(fixturename: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var name: String = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturename: builder.name)
+            }
+        }
 
-      extension Team: Fixtureable {
-          init(fixturename: String, fixturemembers: [Item]) {
-              name = fixturename
-              members = fixturemembers
-          }
-          public static var fixture: Self {
-              .init(fixturename: .fixture, fixturemembers: .fixture)
-          }
-          public struct FixtureBuilder {
-              public var name: String = .fixture
-              public var members: [Item] = .fixture
-          }
-          public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
-              var builder = FixtureBuilder()
-              configure(&builder)
-              return .init(fixturename: builder.name, fixturemembers: builder.members)
-          }
-      }
-      """,
+        extension Team: Fixtureable {
+            init(fixturename: String, fixturemembers: [Item]) {
+                name = fixturename
+                members = fixturemembers
+            }
+            public static var fixture: Self {
+                .init(fixturename: .fixture, fixturemembers: .fixture)
+            }
+            public struct FixtureBuilder {
+                public var name: String = .fixture
+                public var members: [Item] = .fixture
+            }
+            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturename: builder.name, fixturemembers: builder.members)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
 
   func testStructWithDefaultValues() throws {
     assertMacroExpansion(
-        """
-        @Fixture
-        struct Config {
-            var timeout: Int = 30
-            var retryCount: Int = 3
-            let name: String
-        }
-        """,
-        expandedSource: """
+      """
+      @Fixture
+      struct Config {
+          var timeout: Int = 30
+          var retryCount: Int = 3
+          let name: String
+      }
+      """,
+      expandedSource: """
         struct Config {
             var timeout: Int = 30
             var retryCount: Int = 3
@@ -365,7 +364,7 @@ final class StructTests: XCTestCase {
             }
         }
         """,
-        macros: ["Fixture": FixtureMacro.self]
+      macros: ["Fixture": FixtureMacro.self]
     )
   }
 }

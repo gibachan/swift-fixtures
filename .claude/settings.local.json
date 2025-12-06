@@ -4,7 +4,8 @@
       "Bash(swift --version)",
       "Bash(swift test:*)",
       "Bash(swift build)",
-      "Bash(swift run:*)"
+      "Bash(swift run:*)",
+      "Bash(make lint)"
     ],
     "deny": [],
     "ask": []

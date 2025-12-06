@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-fixtures}",
+            "name": "Debug FixturesClient",
+            "target": "FixturesClient",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug FixturesClient"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-fixtures}",
+            "name": "Release FixturesClient",
+            "target": "FixturesClient",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release FixturesClient"
+        }
+    ]
+}

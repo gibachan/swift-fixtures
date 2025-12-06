@@ -1,5 +1,5 @@
-import Foundation
 import Fixtures
+import Foundation
 import Testing
 
 @Fixture
@@ -121,12 +121,13 @@ struct FixtureTests {
   func fixtureStructWithDefaultValues() {
     // Test that properties with default values use .fixture
     let fixtureConfig = Config.fixture
-    #expect(fixtureConfig.timeout == 1) // Uses .fixture (Int.fixture = 1)
-    #expect(fixtureConfig.retryCount == 1) // Uses .fixture (Int.fixture = 1)
-    #expect(fixtureConfig.serviceName == "a") // Required parameter
+    #expect(fixtureConfig.timeout == 1)  // Uses .fixture (Int.fixture = 1)
+    #expect(fixtureConfig.retryCount == 1)  // Uses .fixture (Int.fixture = 1)
+    #expect(fixtureConfig.serviceName == "a")  // Required parameter
 
     // Test that we can also create with custom values for properties with defaults
-    let customConfig = Config(fixturetimeout: 60, fixtureretryCount: 5, fixtureserviceName: "custom")
+    let customConfig = Config(
+      fixturetimeout: 60, fixtureretryCount: 5, fixtureserviceName: "custom")
     #expect(customConfig.timeout == 60)
     #expect(customConfig.retryCount == 5)
     #expect(customConfig.serviceName == "custom")
@@ -146,7 +147,7 @@ struct FixtureTests {
     let partialItem = Item.fixture {
       $0.name = "Partial"
     }
-    #expect(partialItem.id == 1) // Default fixture value
+    #expect(partialItem.id == 1)  // Default fixture value
     #expect(partialItem.name == "Partial")
   }
 
@@ -157,8 +158,8 @@ struct FixtureTests {
       $0.name = "Alice"
     }
     #expect(person.name == "Alice")
-    #expect(person.age == 1) // Default fixture value
-    #expect(person.email == "a") // Default fixture value
+    #expect(person.age == 1)  // Default fixture value
+    #expect(person.email == "a")  // Default fixture value
 
     // Test modifying multiple properties including let
     let customPerson = Person.fixture {
@@ -186,7 +187,7 @@ struct FixtureTests {
     let item1 = Item.fixture {
       $0.name = "Custom Item"
     }
-    #expect(item1.id == 1) // Default fixture value
+    #expect(item1.id == 1)  // Default fixture value
     #expect(item1.name == "Custom Item")
 
     // Test closure with multiple property overrides
@@ -215,7 +216,7 @@ struct FixtureTests {
       $0.name = "Dream Team"
     }
     #expect(team.name == "Dream Team")
-    #expect(team.members.count == 3) // Default fixture array
+    #expect(team.members.count == 3)  // Default fixture array
   }
 
   @Test
@@ -224,7 +225,7 @@ struct FixtureTests {
     let item1 = Item.fixture {
       $0.name = "Custom Item"
     }
-    #expect(item1.id == 1) // Default
+    #expect(item1.id == 1)  // Default
     #expect(item1.name == "Custom Item")
 
     // Test closure pattern - customize multiple properties
@@ -240,14 +241,20 @@ struct FixtureTests {
       $0.id = 42
     }
     #expect(item4.id == 42)
-    #expect(item4.name == "a") // Default
+    #expect(item4.name == "a")  // Default
 
     // Test closure with nested struct
     let team = Team.fixture {
       $0.name = "Dream Team"
       $0.members = [
-        Item.fixture { $0.id = 1; $0.name = "Alice" },
-        Item.fixture { $0.id = 2; $0.name = "Bob" }
+        Item.fixture {
+          $0.id = 1
+          $0.name = "Alice"
+        },
+        Item.fixture {
+          $0.id = 2
+          $0.name = "Bob"
+        },
       ]
     }
     #expect(team.name == "Dream Team")

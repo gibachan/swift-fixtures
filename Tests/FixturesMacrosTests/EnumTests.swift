@@ -1,10 +1,9 @@
+import FixturesMacros
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
-import FixturesMacros
 
 final class EnumTests: XCTestCase {
   func testEnum() throws {
@@ -17,17 +16,17 @@ final class EnumTests: XCTestCase {
       }
       """,
       expandedSource: """
-      enum AccountType {
-          case normal, premium
-          case administrator
-      }
-      
-      extension AccountType: Fixtureable {
-          public static var fixture: Self {
-              .normal
-          }
-      }
-      """,
+        enum AccountType {
+            case normal, premium
+            case administrator
+        }
+
+        extension AccountType: Fixtureable {
+            public static var fixture: Self {
+                .normal
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -40,11 +39,12 @@ final class EnumTests: XCTestCase {
       }
       """,
       expandedSource: """
-      enum EmptyEnum {
-      }
-      """,
+        enum EmptyEnum {
+        }
+        """,
       diagnostics: [
-        DiagnosticSpec(message: "Enum must have at least one case to generate fixture", line: 1, column: 1)
+        DiagnosticSpec(
+          message: "Enum must have at least one case to generate fixture", line: 1, column: 1)
       ],
       macros: ["Fixture": FixtureMacro.self]
     )
@@ -60,17 +60,17 @@ final class EnumTests: XCTestCase {
       }
       """,
       expandedSource: """
-      enum Result {
-          case success(String)
-          case failure(Error)
-      }
-      
-      extension Result: Fixtureable {
-          public static var fixture: Self {
-              .success(.fixture)
-          }
-      }
-      """,
+        enum Result {
+            case success(String)
+            case failure(Error)
+        }
+
+        extension Result: Fixtureable {
+            public static var fixture: Self {
+                .success(.fixture)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
@@ -85,17 +85,17 @@ final class EnumTests: XCTestCase {
       }
       """,
       expandedSource: """
-      enum Complex {
-          case data(String, Int, Bool)
-          case simple
-      }
-      
-      extension Complex: Fixtureable {
-          public static var fixture: Self {
-              .data(.fixture, .fixture, .fixture)
-          }
-      }
-      """,
+        enum Complex {
+            case data(String, Int, Bool)
+            case simple
+        }
+
+        extension Complex: Fixtureable {
+            public static var fixture: Self {
+                .data(.fixture, .fixture, .fixture)
+            }
+        }
+        """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }

@@ -77,8 +77,8 @@ extension Optional: Fixtureable {
   conformances: Fixtureable,
   names: named(init), named(fixture), named(FixtureBuilder)
 )
-public macro Fixture() = #externalMacro(
-  module: "FixturesMacros",
-  type: "FixtureMacro"
-)
-
+public macro Fixture() =
+  #externalMacro(
+    module: "FixturesMacros",
+    type: "FixtureMacro"
+  )
