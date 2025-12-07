@@ -4,7 +4,7 @@ import SwiftSyntaxMacros
 #if canImport(FixturesMacros)
   import FixturesMacros
 
-  let testMacros: [String: Macro.Type] = [
+  let testMacros: [String: any Macro.Type] = [
     "Fixture": FixtureMacro.self
   ]
 #endif

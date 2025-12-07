@@ -458,7 +458,7 @@ extension FixtureMacro {
 
 @main
 struct StubKitMacroDemoPlugin: CompilerPlugin {
-  let providingMacros: [Macro.Type] = [
+  let providingMacros: [any Macro.Type] = [
     FixtureMacro.self
   ]
 }

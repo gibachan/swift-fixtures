@@ -51,3 +51,11 @@ let package = Package(
     ),
   ]
 )
+
+package.targets.forEach { target in
+  var settings = target.swiftSettings ?? []
+  settings.append(contentsOf: [
+    .enableUpcomingFeature("ExistentialAny"),
+  ])
+  target.swiftSettings = settings
+}
