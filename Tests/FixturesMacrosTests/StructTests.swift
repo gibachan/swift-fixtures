@@ -13,40 +13,41 @@ final class StructTests: XCTestCase {
       struct User {
           let id: String
           let age: Int
-          let isRich: Bool
+          let isAdmin: Bool
       }
       """,
       expandedSource: """
         struct User {
             let id: String
             let age: Int
-            let isRich: Bool
+            let isAdmin: Bool
         }
 
         extension User: Fixtureable {
-            init(fixtureid: String, fixtureage: Int, fixtureisRich: Bool) {
+            init(fixtureid: String, fixtureage: Int, fixtureisAdmin: Bool) {
                 id = fixtureid
                 age = fixtureage
-                isRich = fixtureisRich
+                isAdmin = fixtureisAdmin
             }
             public static var fixture: Self {
-                .init(fixtureid: .fixture, fixtureage: .fixture, fixtureisRich: .fixture)
+                .init(fixtureid: .fixture, fixtureage: .fixture, fixtureisAdmin: .fixture)
             }
             public struct FixtureBuilder {
                 public var id: String = .fixture
                 public var age: Int = .fixture
-                public var isRich: Bool = .fixture
+                public var isAdmin: Bool = .fixture
             }
             public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
-                return .init(fixtureid: builder.id, fixtureage: builder.age, fixtureisRich: builder.isRich)
+                return .init(fixtureid: builder.id, fixtureage: builder.age, fixtureisAdmin: builder.isAdmin)
             }
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+
   func testNestedStruct() throws {
     assertMacroExpansion(
       """
@@ -228,35 +229,31 @@ final class StructTests: XCTestCase {
       @Fixture
       struct User {
           let name: String
-          let nickname: String?
           let age: Int?
       }
       """,
       expandedSource: """
         struct User {
             let name: String
-            let nickname: String?
             let age: Int?
         }
 
         extension User: Fixtureable {
-            init(fixturename: String, fixturenickname: String?, fixtureage: Int?) {
+            init(fixturename: String, fixtureage: Int?) {
                 name = fixturename
-                nickname = fixturenickname
                 age = fixtureage
             }
             public static var fixture: Self {
-                .init(fixturename: .fixture, fixturenickname: .fixture, fixtureage: .fixture)
+                .init(fixturename: .fixture, fixtureage: .fixture)
             }
             public struct FixtureBuilder {
                 public var name: String = .fixture
-                public var nickname: String? = .fixture
                 public var age: Int? = .fixture
             }
             public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
-                return .init(fixturename: builder.name, fixturenickname: builder.nickname, fixtureage: builder.age)
+                return .init(fixturename: builder.name, fixtureage: builder.age)
             }
         }
         """,
