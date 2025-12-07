@@ -20,7 +20,7 @@ Add swift-fixtures to your project using Swift Package Manager:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/gibachan/swift-fixtures.git", from: "1.0.0")
+    .package(url: "https://github.com/gibachan/swift-fixtures.git", from: "0.1.0")
 ],
 targets: [
     .target(
@@ -34,11 +34,12 @@ targets: [
 
 ## Features
 
-- ✅ **Struct support** - Generate fixtures for struct types
-- ✅ **Enum support** - Generate fixtures for enum types
+- ✅ **Struct fixtures** - Generate `.fixture` static property and customizable initializers
+- ✅ **Enum fixtures** - Generate fixtures for enum types
+- ✅ **Builder pattern** - Customize properties using closures: `Type.fixture { $0.property = value }`
 - ✅ **Nested types** - Support for nested structs and enums
-- ✅ **Builder pattern** - Customize properties using closures
-- ✅ **Default values** - Automatic handling of properties with default values
+- ✅ **Standard type support** - 15+ pre-built fixtures for common types (String, Int, Date, URL, UUID, Arrays, etc.)
+- ✅ **Type safety** - Recursive fixture generation for custom types conforming to `Fixtureable`
 - ❌ **Class support** - Classes (reference types) are not supported
 
 ## Usage
@@ -71,11 +72,6 @@ let bob = User.fixture {
 }
 // User(id: "a", name: "Bob", age: 30, role: .admin("admin123", permissions: ["read", "write"]))
 ```
-
-## Requirements
-
-- Swift 5.9+
-- iOS 13.0+ / macOS 10.15+ / tvOS 13.0+ / watchOS 6.0+
 
 ## Development
 
