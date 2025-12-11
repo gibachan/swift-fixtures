@@ -60,6 +60,7 @@ extension FixtureMacro {
     type: some TypeSyntaxProtocol
   ) -> [ExtensionDeclSyntax] {
     let parameters = extractParameters(from: decl)
+    let accessModifier = extractAccessModifier(from: decl)
     return [
       ExtensionDeclSyntax(
         extensionKeyword: .keyword(.extension),
@@ -69,10 +70,10 @@ extension FixtureMacro {
         },
         memberBlock: MemberBlockSyntax(
           members: MemberBlockItemListSyntax {
-            MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters))
-            MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters))
-            MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters))
-            MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters))
+            MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: accessModifier))
+            MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: accessModifier))
+            MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: accessModifier))
+            MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: accessModifier))
           }
         )
       )
@@ -99,6 +100,13 @@ extension FixtureMacro {
     }
 
     let mockExpression = createEnumCaseFixtureExpression(for: firstEnumCase)
+    let accessModifier = extractAccessModifier(from: decl)
+
+    var modifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
 
     return [
       ExtensionDeclSyntax(
@@ -111,10 +119,7 @@ extension FixtureMacro {
           members: MemberBlockItemListSyntax {
             MemberBlockItemSyntax(
               decl: VariableDeclSyntax(
-                modifiers: [
-                  DeclModifierSyntax(name: .keyword(.public)),
-                  DeclModifierSyntax(name: .keyword(.static)),
-                ],
+                modifiers: DeclModifierListSyntax(modifiers),
                 bindingSpecifier: .keyword(.var),
                 bindings: PatternBindingListSyntax {
                   PatternBindingSyntax(
@@ -137,6 +142,22 @@ extension FixtureMacro {
         )
       )
     ]
+  }
+}
+
+// MARK: - Access Modifier Helper
+
+extension FixtureMacro {
+  fileprivate static func extractAccessModifier(
+    from declaration: some DeclGroupSyntax
+  ) -> DeclModifierSyntax? {
+    let accessKeywords: [Keyword] = [.public, .internal, .fileprivate, .private, .package]
+    return declaration.modifiers.first { modifier in
+      guard case .keyword(let keyword) = modifier.name.tokenKind else {
+        return false
+      }
+      return accessKeywords.contains(keyword)
+    }
   }
 }
 
@@ -212,7 +233,8 @@ extension FixtureMacro {
   }
 
   fileprivate static func createFixtureInitializer(
-    for parameters: [Parameter]
+    for parameters: [Parameter],
+    accessModifier: DeclModifierSyntax?
   ) -> InitializerDeclSyntax {
     let functionParameters = parameters.map { parameter in
       FunctionParameterSyntax(
@@ -234,7 +256,13 @@ extension FixtureMacro {
         })
     }
 
+    var modifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+
     return InitializerDeclSyntax(
+      modifiers: DeclModifierListSyntax(modifiers),
       signature: FunctionSignatureSyntax(
         parameterClause: FunctionParameterClauseSyntax(
           parametersBuilder: {
@@ -251,7 +279,8 @@ extension FixtureMacro {
   }
 
   fileprivate static func createStaticFixtureProperty(
-    for properties: [Parameter]
+    for properties: [Parameter],
+    accessModifier: DeclModifierSyntax?
   ) -> VariableDeclSyntax {
     // Only include properties without default values in the .fixture initializer call
     // Properties with default values will use their default argument (.fixture)
@@ -266,11 +295,14 @@ extension FixtureMacro {
         )
       }
 
+    var modifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
+
     return VariableDeclSyntax(
-      modifiers: [
-        DeclModifierSyntax(name: .keyword(.public)),
-        DeclModifierSyntax(name: .keyword(.static)),
-      ],
+      modifiers: DeclModifierListSyntax(modifiers),
       bindingSpecifier: .keyword(.var),
       bindings: PatternBindingListSyntax {
         PatternBindingSyntax(
@@ -307,12 +339,18 @@ extension FixtureMacro {
   }
 
   fileprivate static func createFixtureBuilderStruct(
-    for parameters: [Parameter]
+    for parameters: [Parameter],
+    accessModifier: DeclModifierSyntax?
   ) -> StructDeclSyntax {
+    var propertyModifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      propertyModifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+
     let properties = parameters.map { parameter in
       MemberBlockItemSyntax(
         decl: VariableDeclSyntax(
-          modifiers: [DeclModifierSyntax(name: .keyword(.public))],
+          modifiers: DeclModifierListSyntax(propertyModifiers),
           bindingSpecifier: .keyword(.var),
           bindings: PatternBindingListSyntax {
             PatternBindingSyntax(
@@ -327,8 +365,13 @@ extension FixtureMacro {
       )
     }
 
+    var structModifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      structModifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+
     return StructDeclSyntax(
-      modifiers: [DeclModifierSyntax(name: .keyword(.public))],
+      modifiers: DeclModifierListSyntax(structModifiers),
       name: .identifier("FixtureBuilder"),
       memberBlock: MemberBlockSyntax(
         members: MemberBlockItemListSyntax {
@@ -341,7 +384,8 @@ extension FixtureMacro {
   }
 
   fileprivate static func createClosureBasedFixtureMethod(
-    for parameters: [Parameter]
+    for parameters: [Parameter],
+    accessModifier: DeclModifierSyntax?
   ) -> FunctionDeclSyntax {
     let arguments = parameters.map { parameter in
       LabeledExprSyntax(
@@ -354,11 +398,14 @@ extension FixtureMacro {
       )
     }
 
+    var modifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+    }
+    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
+
     return FunctionDeclSyntax(
-      modifiers: [
-        DeclModifierSyntax(name: .keyword(.public)),
-        DeclModifierSyntax(name: .keyword(.static)),
-      ],
+      modifiers: DeclModifierListSyntax(modifiers),
       name: .identifier("fixture"),
       signature: FunctionSignatureSyntax(
         parameterClause: FunctionParameterClauseSyntax(
