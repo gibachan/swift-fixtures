@@ -20,7 +20,7 @@ Add swift-fixtures to your project using Swift Package Manager:
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/gibachan/swift-fixtures.git", from: "0.1.0")
+    .package(url: "https://github.com/gibachan/swift-fixtures.git", from: "0.2.0")
 ],
 targets: [
     .target(
@@ -41,6 +41,7 @@ targets: [
 - ✅ **Standard type support** - 15+ pre-built fixtures for common types (String, Int, Date, URL, UUID, Arrays, etc.)
 - ✅ **Type safety** - Recursive fixture generation for custom types conforming to `Fixtureable`
 - ❌ **Class support** - Classes (reference types) are not supported
+- 🚧 **Actor support** - Actors are not yet supported
 
 ## Usage
 
