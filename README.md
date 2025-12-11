@@ -54,8 +54,8 @@ struct User {
   @Fixture
   enum Role {
     case guest
-    case user(String)
-    case admin(String, permissions: [String])
+    case user(name: String)
+    case admin(id: String, permissions: [String])
   }
   var role: Role
 }
@@ -68,9 +68,30 @@ let user: User = .fixture
 let bob = User.fixture {
   $0.name = "Bob"
   $0.age = 30
-  $0.role = .admin("admin123", permissions: ["read", "write"])
+  $0.role = .admin(id: "admin123", permissions: ["read", "write"])
 }
-// User(id: "a", name: "Bob", age: 30, role: .admin("admin123", permissions: ["read", "write"]))
+// User(id: "a", name: "Bob", age: 30, role: .admin(id: "admin123", permissions: ["read", "write"]))
+```
+
+## External Library Types
+
+The `@Fixture` macro can only be applied to types you define. For types from external libraries, you can manually conform to `Fixtureable`:
+
+```swift
+import ExternalLibrary
+import Fixtures
+
+extension ExternalType: Fixtureable {
+    static var fixture: Self {
+        ExternalType(
+            name: .fixture,
+            value: .fixture
+        )
+    }
+}
+
+// Now you can use .fixture with external types
+let external: ExternalType = .fixture
 ```
 
 ## Development
