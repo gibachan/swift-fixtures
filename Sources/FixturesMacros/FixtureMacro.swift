@@ -168,8 +168,10 @@ extension FixtureMacro {
       calledExpression: memberAccess,
       leftParen: .leftParenToken(),
       arguments: LabeledExprListSyntax {
-        for _ in parameterClause.parameters {
+        for parameter in parameterClause.parameters {
           LabeledExprSyntax(
+            label: parameter.firstName,
+            colon: parameter.firstName != nil ? .colonToken() : nil,
             expression: createFixtureAccessExpression()
           )
         }
