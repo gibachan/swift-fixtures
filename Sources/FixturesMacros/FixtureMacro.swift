@@ -159,20 +159,6 @@ extension FixtureMacro {
       return accessKeywords.contains(keyword)
     }
   }
-
-  fileprivate static func createAccessModifiers(
-    from declaration: some DeclGroupSyntax,
-    includeStatic: Bool = false
-  ) -> DeclModifierListSyntax {
-    var modifiers: [DeclModifierSyntax] = []
-    if let accessModifier = extractAccessModifier(from: declaration) {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
-    }
-    if includeStatic {
-      modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
-    }
-    return DeclModifierListSyntax(modifiers)
-  }
 }
 
 // MARK: - Helper Methods
