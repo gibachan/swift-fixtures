@@ -168,10 +168,20 @@ extension FixtureMacro {
       calledExpression: memberAccess,
       leftParen: .leftParenToken(),
       arguments: LabeledExprListSyntax {
-        for _ in parameterClause.parameters {
-          LabeledExprSyntax(
-            expression: createFixtureAccessExpression()
-          )
+        for parameter in parameterClause.parameters {
+          if let firstName = parameter.firstName {
+            // Named associated value: use the label
+            LabeledExprSyntax(
+              label: firstName,
+              colon: .colonToken(),
+              expression: createFixtureAccessExpression()
+            )
+          } else {
+            // Unnamed associated value: no label
+            LabeledExprSyntax(
+              expression: createFixtureAccessExpression()
+            )
+          }
         }
       },
       rightParen: .rightParenToken()

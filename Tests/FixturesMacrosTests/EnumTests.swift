@@ -99,4 +99,51 @@ final class EnumTests: XCTestCase {
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+  func testEnumWithMultipleNamedAssociatedValues() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      enum Event {
+          case userAction(userId: String, action: String, timestamp: Int)
+          case systemEvent(code: Int)
+      }
+      """,
+      expandedSource: """
+        enum Event {
+            case userAction(userId: String, action: String, timestamp: Int)
+            case systemEvent(code: Int)
+        }
+
+        extension Event: Fixtureable {
+            public static var fixture: Self {
+                .userAction(userId: .fixture, action: .fixture, timestamp: .fixture)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testEnumWithMixedAssociatedValues() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      enum Mixed {
+          case mixed(String, named: Int, Bool)
+      }
+      """,
+      expandedSource: """
+        enum Mixed {
+            case mixed(String, named: Int, Bool)
+        }
+
+        extension Mixed: Fixtureable {
+            public static var fixture: Self {
+                .mixed(.fixture, named: .fixture, .fixture)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
 }
