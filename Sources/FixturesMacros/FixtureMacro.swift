@@ -169,19 +169,11 @@ extension FixtureMacro {
       leftParen: .leftParenToken(),
       arguments: LabeledExprListSyntax {
         for parameter in parameterClause.parameters {
-          if let firstName = parameter.firstName {
-            // Named associated value: use the label
-            LabeledExprSyntax(
-              label: firstName,
-              colon: .colonToken(),
-              expression: createFixtureAccessExpression()
-            )
-          } else {
-            // Unnamed associated value: no label
-            LabeledExprSyntax(
-              expression: createFixtureAccessExpression()
-            )
-          }
+          LabeledExprSyntax(
+            label: parameter.firstName,
+            colon: parameter.firstName != nil ? .colonToken() : nil,
+            expression: createFixtureAccessExpression()
+          )
         }
       },
       rightParen: .rightParenToken()
