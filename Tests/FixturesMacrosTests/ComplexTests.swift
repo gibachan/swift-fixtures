@@ -52,13 +52,13 @@ final class ComplexTests: XCTestCase {
             init(fixturename: String) {
                 name = fixturename
             }
-            public static var fixture: Self {
+            static var fixture: Self {
                 .init(fixturename: .fixture)
             }
-            public struct FixtureBuilder {
-                public var name: String = .fixture
+            struct FixtureBuilder {
+                var name: String = .fixture
             }
-            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixturename: builder.name)
@@ -69,13 +69,13 @@ final class ComplexTests: XCTestCase {
             init(fixtureyen: Int) {
                 yen = fixtureyen
             }
-            public static var fixture: Self {
+            static var fixture: Self {
                 .init(fixtureyen: .fixture)
             }
-            public struct FixtureBuilder {
-                public var yen: Int = .fixture
+            struct FixtureBuilder {
+                var yen: Int = .fixture
             }
-            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixtureyen: builder.yen)
@@ -83,7 +83,7 @@ final class ComplexTests: XCTestCase {
         }
 
         extension User.Rank: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .bronze
             }
         }
@@ -95,16 +95,16 @@ final class ComplexTests: XCTestCase {
                 money = fixturemoney
                 rank = fixturerank
             }
-            public static var fixture: Self {
+            static var fixture: Self {
                 .init(fixtureid: .fixture, fixturevehicle: .fixture, fixturemoney: .fixture, fixturerank: .fixture)
             }
-            public struct FixtureBuilder {
-                public var id: String = .fixture
-                public var vehicle: Vehicle = .fixture
-                public var money: Money = .fixture
-                public var rank: Rank = .fixture
+            struct FixtureBuilder {
+                var id: String = .fixture
+                var vehicle: Vehicle = .fixture
+                var money: Money = .fixture
+                var rank: Rank = .fixture
             }
-            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixturevehicle: builder.vehicle, fixturemoney: builder.money, fixturerank: builder.rank)

@@ -22,7 +22,7 @@ final class EnumTests: XCTestCase {
         }
 
         extension AccountType: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .normal
             }
         }
@@ -66,7 +66,7 @@ final class EnumTests: XCTestCase {
         }
 
         extension Result: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .success(.fixture)
             }
         }
@@ -91,7 +91,7 @@ final class EnumTests: XCTestCase {
         }
 
         extension Complex: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .data(.fixture, .fixture, .fixture)
             }
         }
@@ -115,7 +115,7 @@ final class EnumTests: XCTestCase {
         }
 
         extension Event: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .userAction(userId: .fixture, action: .fixture, timestamp: .fixture)
             }
         }
@@ -138,8 +138,58 @@ final class EnumTests: XCTestCase {
         }
 
         extension Mixed: Fixtureable {
-            public static var fixture: Self {
+            static var fixture: Self {
                 .mixed(.fixture, named: .fixture, .fixture)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPublicEnum() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      public enum Status {
+          case active
+          case inactive
+      }
+      """,
+      expandedSource: """
+        public enum Status {
+            case active
+            case inactive
+        }
+
+        extension Status: Fixtureable {
+            public static var fixture: Self {
+                .active
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testImplicitInternalEnum() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      enum Status {
+          case active
+          case inactive
+      }
+      """,
+      expandedSource: """
+        enum Status {
+            case active
+            case inactive
+        }
+
+        extension Status: Fixtureable {
+            static var fixture: Self {
+                .active
             }
         }
         """,
