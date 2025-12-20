@@ -206,29 +206,37 @@ extension FixtureMacro {
   fileprivate static func extractParameters(
     from declaration: some DeclGroupSyntax
   ) -> [Parameter] {
-    return declaration.memberBlock.members.compactMap { member in
-      guard let variable = member.decl.as(VariableDeclSyntax.self),
-        let patternBinding = variable.bindings.first,
-        let identifierPattern = patternBinding.pattern.as(IdentifierPatternSyntax.self),
-        let typeAnnotation = patternBinding.typeAnnotation
-      else {
-        return nil
+    return declaration.memberBlock.members.flatMap { member in
+      guard let variable = member.decl.as(VariableDeclSyntax.self) else {
+        return [Parameter]()
       }
 
-      // Exclude computed properties (properties with accessor blocks like { get } or { willSet })
-      // We only want stored properties for fixture initialization
-      if patternBinding.accessorBlock != nil {
-        return nil
+      return variable.bindings.compactMap { patternBinding in
+        guard let identifierPattern = patternBinding.pattern.as(IdentifierPatternSyntax.self) else {
+          return nil
+        }
+
+        // Exclude computed properties (properties with accessor blocks like { get } or { willSet })
+        // We only want stored properties for fixture initialization
+        if patternBinding.accessorBlock != nil {
+          return nil
+        }
+
+        // For comma-separated declarations, the type might be on the binding or inherited from the variable
+        let typeAnnotation = patternBinding.typeAnnotation ?? variable.bindings.last?.typeAnnotation
+        guard let typeAnnotation = typeAnnotation else {
+          return nil
+        }
+
+        // Check if the property has a default value
+        let hasDefaultValue = patternBinding.initializer != nil
+
+        return Parameter(
+          identifier: identifierPattern.identifier.trimmed,
+          type: typeAnnotation.type.trimmed,
+          hasDefaultValue: hasDefaultValue
+        )
       }
-
-      // Check if the property has a default value
-      let hasDefaultValue = patternBinding.initializer != nil
-
-      return Parameter(
-        identifier: identifierPattern.identifier.trimmed,
-        type: typeAnnotation.type.trimmed,
-        hasDefaultValue: hasDefaultValue
-      )
     }
   }
 
