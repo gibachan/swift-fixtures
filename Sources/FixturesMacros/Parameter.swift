@@ -17,6 +17,6 @@ struct Parameter {
 
 extension Parameter {
   var fixtureParameterName: String {
-    "fixture\(identifier.trimmed.text)"
+    "fixture\(identifier.text)"
   }
 }
