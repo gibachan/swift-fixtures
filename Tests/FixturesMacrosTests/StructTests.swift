@@ -466,4 +466,38 @@ final class StructTests: XCTestCase {
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+
+  func testComment() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      struct User {
+          let id: String // comment
+      }
+      """,
+      expandedSource: """
+        struct User {
+            let id: String // comment
+        }
+
+        extension User: Fixtureable {
+            init(fixtureid: String) {
+                id = fixtureid
+            }
+            static var fixture: Self {
+                .init(fixtureid: .fixture)
+            }
+            struct FixtureBuilder {
+                var id: String = .fixture
+            }
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureid: builder.id)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
 }
