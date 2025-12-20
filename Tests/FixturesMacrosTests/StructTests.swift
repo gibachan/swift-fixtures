@@ -500,4 +500,44 @@ final class StructTests: XCTestCase {
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+
+  func testCommaSeparatedProperties() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      struct User {
+          let id, name: String
+          var age: Int
+      }
+      """,
+      expandedSource: """
+        struct User {
+            let id, name: String
+            var age: Int
+        }
+
+        extension User: Fixtureable {
+            init(fixtureid: String, fixturename: String, fixtureage: Int) {
+                id = fixtureid
+                name = fixturename
+                age = fixtureage
+            }
+            static var fixture: Self {
+                .init(fixtureid: .fixture, fixturename: .fixture, fixtureage: .fixture)
+            }
+            struct FixtureBuilder {
+                var id: String = .fixture
+                var name: String = .fixture
+                var age: Int = .fixture
+            }
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureid: builder.id, fixturename: builder.name, fixtureage: builder.age)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
 }
