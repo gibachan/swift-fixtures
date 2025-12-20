@@ -196,4 +196,54 @@ final class EnumTests: XCTestCase {
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+
+  func testEnumWithComment() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      enum Status {
+          case active // This is active status
+          case inactive
+      }
+      """,
+      expandedSource: """
+        enum Status {
+            case active // This is active status
+            case inactive
+        }
+
+        extension Status: Fixtureable {
+            static var fixture: Self {
+                .active
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testEnumWithAssociatedValueAndComment() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      enum Result {
+          case success(String) // Success with value
+          case failure(Error)
+      }
+      """,
+      expandedSource: """
+        enum Result {
+            case success(String) // Success with value
+            case failure(Error)
+        }
+
+        extension Result: Fixtureable {
+            static var fixture: Self {
+                .success(.fixture)
+            }
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
 }

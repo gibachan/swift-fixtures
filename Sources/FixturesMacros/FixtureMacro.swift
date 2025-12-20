@@ -173,7 +173,7 @@ extension FixtureMacro {
   fileprivate static func createEnumCaseFixtureExpression(for enumCase: EnumCaseElementSyntax)
     -> ExprSyntax
   {
-    let caseName = enumCase.name.text
+    let caseName = enumCase.name.trimmed.text
     let memberAccess = MemberAccessExprSyntax(
       declName: DeclReferenceExprSyntax(baseName: .identifier(caseName))
     )
@@ -191,7 +191,7 @@ extension FixtureMacro {
       arguments: LabeledExprListSyntax {
         for parameter in parameterClause.parameters {
           LabeledExprSyntax(
-            label: parameter.firstName,
+            label: parameter.firstName?.trimmed,
             colon: parameter.firstName != nil ? .colonToken() : nil,
             expression: createFixtureAccessExpression()
           )
@@ -225,8 +225,8 @@ extension FixtureMacro {
       let hasDefaultValue = patternBinding.initializer != nil
 
       return Parameter(
-        identifier: identifierPattern.identifier,
-        type: typeAnnotation.type,
+        identifier: identifierPattern.identifier.trimmed,
+        type: typeAnnotation.type.trimmed,
         hasDefaultValue: hasDefaultValue
       )
     }
