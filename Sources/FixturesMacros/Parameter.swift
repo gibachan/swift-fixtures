@@ -16,6 +16,10 @@ struct Parameter {
 }
 
 extension Parameter {
+  /// Generates a fixture parameter name by prefixing "fixture" to the property name.
+  ///
+  /// For example, a property named `name` becomes a fixture parameter `fixtureName`.
+  /// This naming convention helps distinguish fixture parameters from regular parameters.
   var fixtureParameterName: String {
     "fixture\(identifier.text)"
   }

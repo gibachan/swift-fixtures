@@ -95,6 +95,18 @@ extension ExternalType: Fixtureable {
 let external: ExternalType = .fixture
 ```
 
+## Documentation
+
+Full DocC documentation is available and can be generated locally:
+
+```bash
+# Generate and open documentation
+./scripts/generate-docs.sh
+
+# Or manually with xcodebuild
+xcodebuild docbuild -scheme Fixtures -destination 'platform=macOS'
+```
+
 ## Development
 
 ```bash
