@@ -52,6 +52,11 @@ let package = Package(
   ]
 )
 
+// Add the documentation compiler plugin
+package.dependencies.append(
+  .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.4.5")
+)
+
 package.targets.forEach { target in
   var settings = target.swiftSettings ?? []
   settings.append(contentsOf: [
