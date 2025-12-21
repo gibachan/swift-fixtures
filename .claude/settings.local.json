@@ -5,7 +5,9 @@
       "Bash(swift test:*)",
       "Bash(swift build)",
       "Bash(swift run:*)",
-      "Bash(make lint)"
+      "Bash(make lint)",
+      "Bash(swift package:*)",
+      "Bash(xcodebuild docbuild:*)",
     ],
     "deny": [],
     "ask": []

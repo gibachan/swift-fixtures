@@ -6,8 +6,17 @@ import SwiftSyntaxMacros
 
 // MARK: - Diagnostic Messages
 
+/// Error types that can occur during `@Fixture` macro expansion.
+///
+/// These diagnostic messages provide clear feedback when the macro encounters
+/// unsupported types or invalid declarations during compilation.
 enum FixtureMacroError: String, DiagnosticMessage {
+  /// Indicates that an enum declaration has no cases defined.
+  /// The `@Fixture` macro requires at least one enum case to generate a fixture value.
   case noEnumCases = "Enum must have at least one case to generate fixture"
+
+  /// Indicates that the macro was applied to an unsupported declaration type.
+  /// The `@Fixture` macro only supports struct and enum declarations.
   case unsupportedType = "Only structs and enums are supported for @Fixture macro"
 
   var message: String { rawValue }
@@ -21,7 +30,47 @@ enum FixtureMacroError: String, DiagnosticMessage {
 
 // MARK: - Macro Implementation
 
+/// The main implementation of the `@Fixture` macro.
+///
+/// `FixtureMacro` is an extension macro that generates fixture support for Swift types.
+/// It implements the `ExtensionMacro` protocol to provide automatic conformance to the
+/// `Fixtureable` protocol along with fixture generation methods.
+///
+/// ## How It Works
+///
+/// When applied to a declaration, the macro analyzes the type and generates:
+/// - **For Structs**: Complete fixture infrastructure including initializers, static properties, and builder patterns
+/// - **For Enums**: Simple fixture support using the first enum case
+///
+/// ## Generated Code
+///
+/// For structs, the macro generates:
+/// ```swift
+/// extension YourStruct: Fixtureable {
+///   init(fixtureName: String = .fixture, fixtureAge: Int = .fixture, ...)
+///   static var fixture: Self { ... }
+///   struct FixtureBuilder { ... }
+///   static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self { ... }
+/// }
+/// ```
+///
+/// For enums, it generates:
+/// ```swift
+/// extension YourEnum: Fixtureable {
+///   static var fixture: Self { .firstCase }
+/// }
+/// ```
 public struct FixtureMacro: ExtensionMacro {
+  /// Expands the `@Fixture` macro for supported declaration types.
+  ///
+  /// - Parameters:
+  ///   - node: The attribute syntax node representing the `@Fixture` macro
+  ///   - declaration: The declaration the macro is attached to (struct or enum)
+  ///   - type: The type syntax for the target type
+  ///   - protocols: The protocols to conform to (includes `Fixtureable`)
+  ///   - context: The macro expansion context for diagnostics
+  /// - Returns: An array of extension declarations providing fixture functionality
+  /// - Throws: Compilation errors for unsupported types
   public static func expansion(
     of node: AttributeSyntax,
     attachedTo declaration: some DeclGroupSyntax,
@@ -55,6 +104,16 @@ extension FixtureMacro {
 // MARK: - Processing Methods
 
 extension FixtureMacro {
+  /// Processes a struct declaration to generate fixture support.
+  ///
+  /// This method analyzes the struct's properties and generates a complete
+  /// fixture infrastructure including initializers, static properties, and
+  /// builder patterns for flexible test data creation.
+  ///
+  /// - Parameters:
+  ///   - decl: The struct declaration syntax to process
+  ///   - type: The type syntax for the struct
+  /// - Returns: Extension declarations providing fixture functionality
   fileprivate static func processStruct(
     decl: StructDeclSyntax,
     type: some TypeSyntaxProtocol
@@ -80,6 +139,18 @@ extension FixtureMacro {
     ]
   }
 
+  /// Processes an enum declaration to generate fixture support.
+  ///
+  /// This method analyzes the enum's cases and generates a fixture implementation
+  /// using the first available case. For cases with associated values, it automatically
+  /// provides fixture values for all associated types.
+  ///
+  /// - Parameters:
+  ///   - node: The attribute syntax node for error reporting
+  ///   - decl: The enum declaration syntax to process
+  ///   - type: The type syntax for the enum
+  ///   - context: The macro expansion context for diagnostics
+  /// - Returns: Extension declarations providing fixture functionality
   fileprivate static func processEnum(
     node: AttributeSyntax,
     decl: EnumDeclSyntax,
@@ -513,8 +584,13 @@ extension FixtureMacro {
 
 // MARK: - Compiler Plugin
 
+/// The compiler plugin that registers the `FixtureMacro` with the Swift compiler.
+///
+/// This plugin serves as the entry point for the macro system, making the
+/// `@Fixture` macro available for use in Swift code during compilation.
 @main
-struct StubKitMacroDemoPlugin: CompilerPlugin {
+struct FixturesCompilerPlugin: CompilerPlugin {
+  /// The list of macros provided by this plugin.
   let providingMacros: [any Macro.Type] = [
     FixtureMacro.self
   ]
