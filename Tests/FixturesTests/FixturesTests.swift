@@ -3,7 +3,7 @@ import Foundation
 import XCTest
 
 @Fixture
-struct Item {
+struct Item: Hashable {
   let id: Int
   let name: String
 }
@@ -86,6 +86,24 @@ final class FixturesTests: XCTestCase {
     XCTAssertEqual(itemDict.count, 1)
     XCTAssertEqual(itemDict["a"]?.id, 1)
     XCTAssertEqual(itemDict["a"]?.name, "a")
+  }
+
+  func testFixtureSet() {
+    let intSet = Set<Int>.fixture
+    XCTAssertEqual(intSet, [1])
+
+    let stringSet = Set<String>.fixture
+    XCTAssertEqual(stringSet, ["a"])
+
+    let boolSet = Set<Bool>.fixture
+    XCTAssertEqual(boolSet, [true])
+  }
+
+  func testFixtureCustomSet() {
+    let itemSet = Set<Item>.fixture
+    XCTAssertEqual(itemSet.count, 1)
+    XCTAssertEqual(itemSet.first?.id, 1)
+    XCTAssertEqual(itemSet.first?.name, "a")
   }
 
   func testFixtureCustomArray() {

@@ -158,6 +158,15 @@ extension Dictionary: Fixtureable where Key: Fixtureable, Value: Fixtureable {
   }
 }
 
+/// Built-in fixture support for `Set` type where elements conform to `Fixtureable`.
+/// Returns a set with a single fixture element as the default fixture value.
+/// Note: Since `Element.fixture` always returns the same value, the set contains only one element.
+extension Set: Fixtureable where Element: Fixtureable {
+  public static var fixture: Self {
+    [Element.fixture]
+  }
+}
+
 /// Built-in fixture support for `Optional` type.
 /// Returns `nil` as the default fixture value.
 extension Optional: Fixtureable {
