@@ -408,6 +408,8 @@ final class StructTests: XCTestCase {
             }
             public struct FixtureBuilder {
                 public var name: String = .fixture
+                public init() {
+                }
             }
             public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
@@ -493,6 +495,44 @@ final class StructTests: XCTestCase {
     )
   }
 
+  func testPackageStruct() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      package struct Config {
+          let timeout: Int
+      }
+      """,
+      expandedSource: """
+        package struct Config {
+            let timeout: Int
+        }
+
+        extension Config: Fixtureable {
+            #if DEBUG
+            package init(fixturetimeout: Int) {
+                timeout = fixturetimeout
+            }
+            package static var fixture: Self {
+                .init(fixturetimeout: .fixture)
+            }
+            package struct FixtureBuilder {
+                package var timeout: Int = .fixture
+                package init() {
+                }
+            }
+            package static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturetimeout: builder.timeout)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
   func testComment() throws {
     assertMacroExpansion(
       """
@@ -563,6 +603,84 @@ final class StructTests: XCTestCase {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixturename: builder.name, fixtureage: builder.age)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testStructWithStaticProperty() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      struct Config {
+          static let defaultTimeout: Int = 30
+          static var sharedInstance: Config?
+          let name: String
+      }
+      """,
+      expandedSource: """
+        struct Config {
+            static let defaultTimeout: Int = 30
+            static var sharedInstance: Config?
+            let name: String
+        }
+
+        extension Config: Fixtureable {
+            #if DEBUG
+            init(fixturename: String) {
+                name = fixturename
+            }
+            static var fixture: Self {
+                .init(fixturename: .fixture)
+            }
+            struct FixtureBuilder {
+                var name: String = .fixture
+            }
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturename: builder.name)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testStructWithLazyProperty() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      struct Cache {
+          lazy var data: String = "cached"
+          let id: String
+      }
+      """,
+      expandedSource: """
+        struct Cache {
+            lazy var data: String = "cached"
+            let id: String
+        }
+
+        extension Cache: Fixtureable {
+            #if DEBUG
+            init(fixtureid: String) {
+                id = fixtureid
+            }
+            static var fixture: Self {
+                .init(fixtureid: .fixture)
+            }
+            struct FixtureBuilder {
+                var id: String = .fixture
+            }
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixtureid: builder.id)
             }
             #endif
         }
