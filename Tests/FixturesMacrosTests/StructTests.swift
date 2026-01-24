@@ -408,6 +408,8 @@ final class StructTests: XCTestCase {
             }
             public struct FixtureBuilder {
                 public var name: String = .fixture
+                public init() {
+                }
             }
             public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
@@ -485,6 +487,44 @@ final class StructTests: XCTestCase {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixturename: builder.name)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPackageStruct() throws {
+    assertMacroExpansion(
+      """
+      @Fixture
+      package struct Config {
+          let timeout: Int
+      }
+      """,
+      expandedSource: """
+        package struct Config {
+            let timeout: Int
+        }
+
+        extension Config: Fixtureable {
+            #if DEBUG
+            package init(fixturetimeout: Int) {
+                timeout = fixturetimeout
+            }
+            package static var fixture: Self {
+                .init(fixturetimeout: .fixture)
+            }
+            package struct FixtureBuilder {
+                package var timeout: Int = .fixture
+                package init() {
+                }
+            }
+            package static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturetimeout: builder.timeout)
             }
             #endif
         }

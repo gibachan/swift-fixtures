@@ -498,6 +498,18 @@ extension FixtureMacro {
       structModifiers.append(DeclModifierSyntax(name: accessModifier.name))
     }
 
+    // Check if explicit init is needed (for public/package access levels)
+    // Swift's auto-generated memberwise init is always internal,
+    // so we need to generate an explicit init for cross-module access
+    let needsExplicitInit: Bool = {
+      guard let accessModifier = accessModifier,
+        case .keyword(let keyword) = accessModifier.name.tokenKind
+      else {
+        return false
+      }
+      return keyword == .public || keyword == .package
+    }()
+
     return StructDeclSyntax(
       modifiers: DeclModifierListSyntax(structModifiers),
       name: .identifier("FixtureBuilder"),
@@ -505,6 +517,21 @@ extension FixtureMacro {
         members: MemberBlockItemListSyntax {
           for property in properties {
             property
+          }
+          if needsExplicitInit {
+            MemberBlockItemSyntax(
+              decl: InitializerDeclSyntax(
+                modifiers: DeclModifierListSyntax(propertyModifiers),
+                signature: FunctionSignatureSyntax(
+                  parameterClause: FunctionParameterClauseSyntax(
+                    parameters: FunctionParameterListSyntax {}
+                  )
+                ),
+                body: CodeBlockSyntax(
+                  statements: CodeBlockItemListSyntax {}
+                )
+              )
+            )
           }
         }
       )
