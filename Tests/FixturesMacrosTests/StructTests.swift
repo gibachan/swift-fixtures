@@ -24,6 +24,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixtureid: String, fixtureage: Int, fixtureisAdmin: Bool) {
                 id = fixtureid
                 age = fixtureage
@@ -42,6 +43,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixtureage: builder.age, fixtureisAdmin: builder.isAdmin)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -81,6 +83,7 @@ final class StructTests: XCTestCase {
         }
 
         extension Vehicle: Fixtureable {
+            #if DEBUG
             init(fixturename: String) {
                 name = fixturename
             }
@@ -95,9 +98,11 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
 
         extension User.Money: Fixtureable {
+            #if DEBUG
             init(fixtureyen: Int) {
                 yen = fixtureyen
             }
@@ -112,9 +117,11 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureyen: builder.yen)
             }
+            #endif
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixtureid: String, fixturevehicle: Vehicle, fixturemoney: Money) {
                 id = fixtureid
                 vehicle = fixturevehicle
@@ -133,6 +140,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixturevehicle: builder.vehicle, fixturemoney: builder.money)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -161,6 +169,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixturefirstName: String, fixturelastName: String) {
                 firstName = fixturefirstName
                 lastName = fixturelastName
@@ -177,6 +186,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturefirstName: builder.firstName, fixturelastName: builder.lastName)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -205,6 +215,7 @@ final class StructTests: XCTestCase {
         }
 
         extension Counter: Fixtureable {
+            #if DEBUG
             init() {
             }
             static var fixture: Self {
@@ -217,6 +228,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init()
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -239,6 +251,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixturename: String, fixtureage: Int?) {
                 name = fixturename
                 age = fixtureage
@@ -255,6 +268,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name, fixtureage: builder.age)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -284,6 +298,7 @@ final class StructTests: XCTestCase {
         }
 
         extension Item: Fixtureable {
+            #if DEBUG
             init(fixturename: String) {
                 name = fixturename
             }
@@ -298,9 +313,11 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
 
         extension Team: Fixtureable {
+            #if DEBUG
             init(fixturename: String, fixturemembers: [Item]) {
                 name = fixturename
                 members = fixturemembers
@@ -317,6 +334,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name, fixturemembers: builder.members)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -341,6 +359,7 @@ final class StructTests: XCTestCase {
         }
 
         extension Config: Fixtureable {
+            #if DEBUG
             init(fixturetimeout: Int = .fixture, fixtureretryCount: Int = .fixture, fixturename: String) {
                 timeout = fixturetimeout
                 retryCount = fixtureretryCount
@@ -359,6 +378,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturetimeout: builder.timeout, fixtureretryCount: builder.retryCount, fixturename: builder.name)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -379,6 +399,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             public init(fixturename: String) {
                 name = fixturename
             }
@@ -393,6 +414,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -413,6 +435,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             internal init(fixturename: String) {
                 name = fixturename
             }
@@ -427,6 +450,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -447,6 +471,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixturename: String) {
                 name = fixturename
             }
@@ -461,6 +486,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -481,6 +507,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixtureid: String) {
                 id = fixtureid
             }
@@ -495,6 +522,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureid: builder.id)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -517,6 +545,7 @@ final class StructTests: XCTestCase {
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixtureid: String, fixturename: String, fixtureage: Int) {
                 id = fixtureid
                 name = fixturename
@@ -535,6 +564,7 @@ final class StructTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixturename: builder.name, fixtureage: builder.age)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]

@@ -16,6 +16,7 @@ struct User {
   var role: Role
 }
 
+#if DEBUG
 // Generate fixture with default values
 let user: User = .fixture
 // User(id: "a", name: "a", age: 1, role: .guest)
@@ -30,3 +31,6 @@ let bob = User.fixture {
 
 print(user)
 print(bob)
+#else
+print("Fixtures are only available in DEBUG builds")
+#endif

@@ -49,6 +49,7 @@ final class ComplexTests: XCTestCase {
         }
 
         extension Vehicle: Fixtureable {
+            #if DEBUG
             init(fixturename: String) {
                 name = fixturename
             }
@@ -63,9 +64,11 @@ final class ComplexTests: XCTestCase {
                 configure(&builder)
                 return .init(fixturename: builder.name)
             }
+            #endif
         }
 
         extension User.Money: Fixtureable {
+            #if DEBUG
             init(fixtureyen: Int) {
                 yen = fixtureyen
             }
@@ -80,15 +83,19 @@ final class ComplexTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureyen: builder.yen)
             }
+            #endif
         }
 
         extension User.Rank: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .bronze
             }
+            #endif
         }
 
         extension User: Fixtureable {
+            #if DEBUG
             init(fixtureid: String, fixturevehicle: Vehicle, fixturemoney: Money, fixturerank: Rank) {
                 id = fixtureid
                 vehicle = fixturevehicle
@@ -109,6 +116,7 @@ final class ComplexTests: XCTestCase {
                 configure(&builder)
                 return .init(fixtureid: builder.id, fixturevehicle: builder.vehicle, fixturemoney: builder.money, fixturerank: builder.rank)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
