@@ -120,6 +120,31 @@ public struct FixtureMacro: ExtensionMacro {
       MemberBlockItemSyntax(decl: ifConfigDecl)
     }
   }
+
+  /// Creates an extension declaration with Fixtureable conformance.
+  ///
+  /// This helper function reduces code duplication between `processStruct` and `processEnum`
+  /// by centralizing the extension creation logic.
+  ///
+  /// - Parameters:
+  ///   - type: The type syntax for the extended type
+  ///   - members: The member declarations to include in the extension
+  /// - Returns: An extension declaration with Fixtureable conformance
+  fileprivate static func createExtension(
+    type: some TypeSyntaxProtocol,
+    members: [MemberBlockItemSyntax]
+  ) -> ExtensionDeclSyntax {
+    return ExtensionDeclSyntax(
+      extensionKeyword: .keyword(.extension),
+      extendedType: type,
+      inheritanceClause: InheritanceClauseSyntax {
+        InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
+      },
+      memberBlock: MemberBlockSyntax(
+        members: wrapMembersInIfDebug(members)
+      )
+    )
+  }
 }
 
 // MARK: - Constants
@@ -155,16 +180,7 @@ extension FixtureMacro {
       MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: accessModifier)),
       MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: accessModifier)),
     ]
-    return ExtensionDeclSyntax(
-      extensionKeyword: .keyword(.extension),
-      extendedType: type,
-      inheritanceClause: InheritanceClauseSyntax {
-        InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
-      },
-      memberBlock: MemberBlockSyntax(
-        members: wrapMembersInIfDebug(members)
-      )
-    )
+    return createExtension(type: type, members: members)
   }
 
   /// Processes an enum declaration to generate fixture support.
@@ -232,16 +248,7 @@ extension FixtureMacro {
       )
     ]
 
-    return ExtensionDeclSyntax(
-      extensionKeyword: .keyword(.extension),
-      extendedType: type,
-      inheritanceClause: InheritanceClauseSyntax {
-        InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
-      },
-      memberBlock: MemberBlockSyntax(
-        members: wrapMembersInIfDebug(members)
-      )
-    )
+    return createExtension(type: type, members: members)
   }
 }
 
