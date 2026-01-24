@@ -7,7 +7,7 @@
       "Bash(swift run:*)",
       "Bash(make lint)",
       "Bash(swift package:*)",
-      "Bash(xcodebuild docbuild:*)",
+      "Bash(xcodebuild docbuild:*)"
     ],
     "deny": [],
     "ask": []

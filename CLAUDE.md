@@ -21,23 +21,48 @@ It consists of:
 - **Fixtures Library** (`Sources/Fixtures/`): Core protocol and built-in type extensions
 - **FixturesMacros** (`Sources/FixturesMacros/`): Compiler plugin that implements the `@Fixture` macro
 - **FixturesClient** (`Sources/FixturesClient/`): Example client demonstrating usage
-- **Tests** (`Tests/`): Comprehensive test suite using Swift Testing framework
+- **Tests** (`Tests/`): Comprehensive test suite
 
 ## Architecture
 
 ### Core Components
 
-1. **Fixtureable Protocol** (`Sources/Fixtures/Fixtures.swift:5-7`): Defines the contract for types that can provide fixtures
-2. **@Fixture Macro** (`Sources/Fixtures/Fixtures.swift:75-83`): Attached extension macro that generates fixture implementations
-3. **FixtureMacro Implementation** (`Sources/FixturesMacros/FixturesMacro.swift:23-40`): Handles struct and enum fixture generation
+1. **Fixtureable Protocol** (`Sources/Fixtures/Fixtures.swift:9-12`): Defines the contract for types that can provide fixtures
+2. **@Fixture Macro** (`Sources/Fixtures/Fixtures.swift:174-183`): Attached extension macro that generates fixture implementations
+3. **FixtureMacro Implementation** (`Sources/FixturesMacros/FixtureMacro.swift:63-95`): Handles struct and enum fixture generation
 4. **Parameter Helper** (`Sources/FixturesMacros/Parameter.swift`): Represents macro expansion parameters
+
+### Built-in Fixtureable Extensions
+
+The library provides fixture support for common types:
+
+- **Basic Types**: `String` ("a"), `Int` (1), `Bool` (true)
+- **Numeric Types**: `Double` (1.0), `Float` (1.0), `UInt`/`UInt8`/`UInt16`/`UInt32`/`UInt64` (1), `Int8`/`Int16`/`Int32`/`Int64` (1)
+- **Foundation Types**: `Date` (Unix epoch), `URL` (https://example.com), `UUID` (zero UUID), `Data` (empty)
+- **Collection Types**: `Array` (3 fixture elements), `Optional` (nil)
 
 ### Macro Implementation Details
 
 The `@Fixture` macro generates different implementations based on the target type:
 
-- **Structs**: Creates an initializer with `fixture` prefixed parameters and a static `fixture` property
-- **Enums**: Uses the first case as the fixture value, handling associated values automatically
+**For Structs**:
+- `init(fixture...:)` initializer with `fixture` prefixed parameters
+- `static var fixture` property returning default fixture instance
+- `FixtureBuilder` struct for builder pattern support
+- `static func fixture(_ configure:)` closure-based method for customization
+
+**For Enums**:
+- `static var fixture` property using the first enum case
+- Automatic handling of associated values (labeled, unlabeled, and mixed)
+
+### Supported Features
+
+- **Computed Properties**: Automatically excluded from fixture generation
+- **Property Observers**: Properties with `didSet`/`willSet` are excluded
+- **Default Values**: Properties with default values get optional fixture parameters
+- **Comma-separated Properties**: Supports `let id, name: String` syntax
+- **Nested Types**: Full support for nested structs and enums
+- **Access Modifiers**: Inherits `public`/`internal`/`fileprivate`/`private`/`package` from the type
 
 ## Common Development Commands
 
@@ -73,20 +98,25 @@ swift run FixturesClient
 
 ## Testing Framework
 
-The project uses **Swift Testing** (not XCTest). Key patterns:
+The project uses **XCTest**. Key patterns:
 
-- Tests are marked with `@Test` attribute
-- Assertions use `#expect()` instead of `XCTAssert`
-- Test structs are marked with `@MainActor`
-- Macro testing uses `SwiftSyntaxMacrosTestSupport` for expansion verification
+- **FixturesTests**: Tests for built-in Fixtureable extensions and runtime behavior
+- **FixturesMacrosTests**: Tests for macro expansion verification using `SwiftSyntaxMacrosTestSupport`
+  - `StructTests.swift`: Struct fixture generation tests
+  - `EnumTests.swift`: Enum fixture generation tests
+  - `ComplexTests.swift`: Nested types and complex scenarios
+- Macro testing uses `assertMacroExpansion()` for expansion verification
 
 ## Target Dependencies
 
 - **Fixtures**: Depends on FixturesMacros
-- **FixturesMacros**: Depends on swift-syntax (SwiftSyntaxMacros, SwiftCompilerPlugin)
+- **FixturesMacros**: Depends on swift-syntax 602.0.0+ (SwiftSyntaxMacros, SwiftCompilerPlugin)
 - **FixturesClient**: Depends on Fixtures
-- **Tests**: Use SwiftSyntaxMacrosTestSupport for macro testing
+- **FixturesTests**: Depends on Fixtures
+- **FixturesMacrosTests**: Depends on FixturesMacros, SwiftSyntaxMacrosTestSupport
 
 ## Platform Support
 
-Supports iOS 13+, macOS 10.15+, tvOS 13+, watchOS 6+, and macCatalyst 13+.
+- **Swift tools version**: 6.2
+- **Platforms**: iOS 13+, macOS 10.15+, tvOS 13+, watchOS 6+, macCatalyst 13+
+- **Upcoming Features**: ExistentialAny enabled
