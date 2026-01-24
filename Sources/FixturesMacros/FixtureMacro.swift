@@ -42,22 +42,30 @@ enum FixtureMacroError: String, DiagnosticMessage {
 /// - **For Structs**: Complete fixture infrastructure including initializers, static properties, and builder patterns
 /// - **For Enums**: Simple fixture support using the first enum case
 ///
+/// All generated members are wrapped in `#if DEBUG ... #endif` to ensure they are only
+/// included in debug builds. The `Fixtureable` conformance is also only applied in
+/// debug builds.
+///
 /// ## Generated Code
 ///
 /// For structs, the macro generates:
 /// ```swift
 /// extension YourStruct: Fixtureable {
+///   #if DEBUG
 ///   init(fixtureName: String = .fixture, fixtureAge: Int = .fixture, ...)
 ///   static var fixture: Self { ... }
 ///   struct FixtureBuilder { ... }
 ///   static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self { ... }
+///   #endif
 /// }
 /// ```
 ///
 /// For enums, it generates:
 /// ```swift
 /// extension YourEnum: Fixtureable {
+///   #if DEBUG
 ///   static var fixture: Self { .firstCase }
+///   #endif
 /// }
 /// ```
 public struct FixtureMacro: ExtensionMacro {
@@ -79,9 +87,12 @@ public struct FixtureMacro: ExtensionMacro {
     in context: some MacroExpansionContext
   ) throws -> [ExtensionDeclSyntax] {
     if let structDecl = declaration.as(StructDeclSyntax.self) {
-      return processStruct(decl: structDecl, type: type)
+      return [processStruct(decl: structDecl, type: type)]
     } else if let enumDecl = declaration.as(EnumDeclSyntax.self) {
-      return processEnum(node: node, decl: enumDecl, type: type, context: context)
+      if let extensionDecl = processEnum(node: node, decl: enumDecl, type: type, context: context) {
+        return [extensionDecl]
+      }
+      return []
     } else {
       context.diagnose(
         Diagnostic(
@@ -91,6 +102,48 @@ public struct FixtureMacro: ExtensionMacro {
       )
       return []
     }
+  }
+
+  /// Wraps member declarations in `#if DEBUG ... #endif`.
+  fileprivate static func wrapMembersInIfDebug(_ members: [MemberBlockItemSyntax]) -> MemberBlockItemListSyntax {
+    let ifConfigDecl = IfConfigDeclSyntax(
+      clauses: IfConfigClauseListSyntax {
+        IfConfigClauseSyntax(
+          poundKeyword: .poundIfToken(),
+          condition: DeclReferenceExprSyntax(baseName: .identifier("DEBUG")),
+          elements: .decls(MemberBlockItemListSyntax(members))
+        )
+      },
+      poundEndif: .poundEndifToken()
+    )
+    return MemberBlockItemListSyntax {
+      MemberBlockItemSyntax(decl: ifConfigDecl)
+    }
+  }
+
+  /// Creates an extension declaration with Fixtureable conformance.
+  ///
+  /// This helper function reduces code duplication between `processStruct` and `processEnum`
+  /// by centralizing the extension creation logic.
+  ///
+  /// - Parameters:
+  ///   - type: The type syntax for the extended type
+  ///   - members: The member declarations to include in the extension
+  /// - Returns: An extension declaration with Fixtureable conformance
+  fileprivate static func createExtension(
+    type: some TypeSyntaxProtocol,
+    members: [MemberBlockItemSyntax]
+  ) -> ExtensionDeclSyntax {
+    return ExtensionDeclSyntax(
+      extensionKeyword: .keyword(.extension),
+      extendedType: type,
+      inheritanceClause: InheritanceClauseSyntax {
+        InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
+      },
+      memberBlock: MemberBlockSyntax(
+        members: wrapMembersInIfDebug(members)
+      )
+    )
   }
 }
 
@@ -108,55 +161,47 @@ extension FixtureMacro {
   ///
   /// This method analyzes the struct's properties and generates a complete
   /// fixture infrastructure including initializers, static properties, and
-  /// builder patterns for flexible test data creation.
+  /// builder patterns for flexible test data creation. All members are wrapped
+  /// in `#if DEBUG` to exclude them from release builds.
   ///
   /// - Parameters:
   ///   - decl: The struct declaration syntax to process
   ///   - type: The type syntax for the struct
-  /// - Returns: Extension declarations providing fixture functionality
+  /// - Returns: Extension declaration providing fixture functionality
   fileprivate static func processStruct(
     decl: StructDeclSyntax,
     type: some TypeSyntaxProtocol
-  ) -> [ExtensionDeclSyntax] {
+  ) -> ExtensionDeclSyntax {
     let parameters = extractParameters(from: decl)
     let accessModifier = extractAccessModifier(from: decl)
-    return [
-      ExtensionDeclSyntax(
-        extensionKeyword: .keyword(.extension),
-        extendedType: type,
-        inheritanceClause: InheritanceClauseSyntax {
-          InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
-        },
-        memberBlock: MemberBlockSyntax(
-          members: MemberBlockItemListSyntax {
-            MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: accessModifier))
-            MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: accessModifier))
-            MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: accessModifier))
-            MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: accessModifier))
-          }
-        )
-      )
+    let members = [
+      MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: accessModifier)),
+      MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: accessModifier)),
+      MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: accessModifier)),
+      MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: accessModifier)),
     ]
+    return createExtension(type: type, members: members)
   }
 
   /// Processes an enum declaration to generate fixture support.
   ///
   /// This method analyzes the enum's cases and generates a fixture implementation
   /// using the first available case. For cases with associated values, it automatically
-  /// provides fixture values for all associated types.
+  /// provides fixture values for all associated types. All members are wrapped
+  /// in `#if DEBUG` to exclude them from release builds.
   ///
   /// - Parameters:
   ///   - node: The attribute syntax node for error reporting
   ///   - decl: The enum declaration syntax to process
   ///   - type: The type syntax for the enum
   ///   - context: The macro expansion context for diagnostics
-  /// - Returns: Extension declarations providing fixture functionality
+  /// - Returns: Extension declaration providing fixture functionality, or nil if no cases
   fileprivate static func processEnum(
     node: AttributeSyntax,
     decl: EnumDeclSyntax,
     type: some TypeSyntaxProtocol,
     context: some MacroExpansionContext
-  ) -> [ExtensionDeclSyntax] {
+  ) -> ExtensionDeclSyntax? {
     let enumCaseDecls = decl.memberBlock.members.compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
     let enumCaseElements = enumCaseDecls.flatMap { $0.elements }
 
@@ -167,7 +212,7 @@ extension FixtureMacro {
           message: FixtureMacroError.noEnumCases
         )
       )
-      return []
+      return nil
     }
 
     let mockExpression = createEnumCaseFixtureExpression(for: firstEnumCase)
@@ -179,40 +224,31 @@ extension FixtureMacro {
     }
     modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
 
-    return [
-      ExtensionDeclSyntax(
-        extensionKeyword: .keyword(.extension),
-        extendedType: type,
-        inheritanceClause: InheritanceClauseSyntax {
-          InheritedTypeSyntax(type: IdentifierTypeSyntax(name: .identifier(fixtureableProtocol)))
-        },
-        memberBlock: MemberBlockSyntax(
-          members: MemberBlockItemListSyntax {
-            MemberBlockItemSyntax(
-              decl: VariableDeclSyntax(
-                modifiers: DeclModifierListSyntax(modifiers),
-                bindingSpecifier: .keyword(.var),
-                bindings: PatternBindingListSyntax {
-                  PatternBindingSyntax(
-                    pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
-                    typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: "Self")),
-                    accessorBlock: AccessorBlockSyntax(
-                      accessors: AccessorBlockSyntax.Accessors(
-                        CodeBlockItemListSyntax {
-                          CodeBlockItemSyntax(
-                            item: .expr(ExprSyntax(mockExpression))
-                          )
-                        }
-                      )
+    let members = [
+      MemberBlockItemSyntax(
+        decl: VariableDeclSyntax(
+          modifiers: DeclModifierListSyntax(modifiers),
+          bindingSpecifier: .keyword(.var),
+          bindings: PatternBindingListSyntax {
+            PatternBindingSyntax(
+              pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
+              typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: "Self")),
+              accessorBlock: AccessorBlockSyntax(
+                accessors: AccessorBlockSyntax.Accessors(
+                  CodeBlockItemListSyntax {
+                    CodeBlockItemSyntax(
+                      item: .expr(ExprSyntax(mockExpression))
                     )
-                  )
-                }
+                  }
+                )
               )
             )
           }
         )
       )
     ]
+
+    return createExtension(type: type, members: members)
   }
 }
 

@@ -12,6 +12,7 @@ The Fixtures library provides a simple and powerful way to create test fixtures 
 - **Type Safety**: All fixtures are statically typed and compile-time verified
 - **Flexible Creation**: Multiple ways to create and customize fixture instances
 - **Built-in Support**: Common types like `String`, `Int`, `Date`, and collections already supported
+- **Debug-only Code**: Fixture code is excluded from release builds, keeping production binaries clean
 
 ### Quick Example
 

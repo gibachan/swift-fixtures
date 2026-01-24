@@ -8,6 +8,7 @@
       "Bash(make lint)",
       "Bash(swift package:*)",
       "Bash(xcodebuild docbuild:*)",
+      "Bash(swift build:*)"
     ],
     "deny": [],
     "ask": []

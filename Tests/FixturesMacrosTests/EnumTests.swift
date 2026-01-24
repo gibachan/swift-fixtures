@@ -22,9 +22,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension AccountType: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .normal
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -66,9 +68,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Result: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .success(.fixture)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -91,9 +95,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Complex: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .data(.fixture, .fixture, .fixture)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -115,9 +121,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Event: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .userAction(userId: .fixture, action: .fixture, timestamp: .fixture)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -138,9 +146,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Mixed: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .mixed(.fixture, named: .fixture, .fixture)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -163,9 +173,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Status: Fixtureable {
+            #if DEBUG
             public static var fixture: Self {
                 .active
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -188,9 +200,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Status: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .active
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -213,9 +227,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Status: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .active
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]
@@ -238,9 +254,11 @@ final class EnumTests: XCTestCase {
         }
 
         extension Result: Fixtureable {
+            #if DEBUG
             static var fixture: Self {
                 .success(.fixture)
             }
+            #endif
         }
         """,
       macros: ["Fixture": FixtureMacro.self]

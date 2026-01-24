@@ -2,14 +2,29 @@ import Foundation
 
 // MARK: - Fixtureable Protocol
 
+#if DEBUG
+
 /// A protocol that provides fixture values for types.
 ///
 /// Types conforming to `Fixtureable` can provide a default fixture value
 /// that can be used in tests and other scenarios where a sample instance is needed.
+///
+/// - Note: This protocol's functionality is only available in DEBUG builds.
+///   In release builds, the protocol has no requirements.
 public protocol Fixtureable {
   /// A default fixture value for this type.
   static var fixture: Self { get }
 }
+
+#else
+
+/// Empty protocol for release builds.
+/// Types will automatically conform with no requirements.
+public protocol Fixtureable {}
+
+#endif
+
+#if DEBUG
 
 // MARK: - Basic Types
 
@@ -142,6 +157,8 @@ extension Optional: Fixtureable {
     nil
   }
 }
+
+#endif
 
 // MARK: - Macro Definition
 
