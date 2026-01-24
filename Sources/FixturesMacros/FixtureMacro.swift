@@ -318,6 +318,19 @@ extension FixtureMacro {
         return [Parameter]()
       }
 
+      // Exclude static and lazy properties
+      // Static properties are type-level, not instance-level
+      // Lazy properties cannot be initialized in a memberwise initializer
+      let hasStaticOrLazy = variable.modifiers.contains { modifier in
+        guard case .keyword(let keyword) = modifier.name.tokenKind else {
+          return false
+        }
+        return keyword == .static || keyword == .lazy
+      }
+      if hasStaticOrLazy {
+        return [Parameter]()
+      }
+
       return variable.bindings.compactMap { patternBinding in
         guard let identifierPattern = patternBinding.pattern.as(IdentifierPatternSyntax.self) else {
           return nil
