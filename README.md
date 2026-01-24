@@ -40,6 +40,7 @@ targets: [
 - ✅ **Nested types** - Support for nested structs and enums
 - ✅ **Standard type support** - 15+ pre-built fixtures for common types (String, Int, Date, URL, UUID, Arrays, etc.)
 - ✅ **Type safety** - Recursive fixture generation for custom types conforming to `Fixtureable`
+- ✅ **Debug-only code** - Fixture code is excluded from release builds using `#if DEBUG`
 - ❌ **Class support** - Classes (reference types) are not supported
 - 🚧 **Actor support** - Actors are not yet supported
 

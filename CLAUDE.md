@@ -63,6 +63,7 @@ The `@Fixture` macro generates different implementations based on the target typ
 - **Comma-separated Properties**: Supports `let id, name: String` syntax
 - **Nested Types**: Full support for nested structs and enums
 - **Access Modifiers**: Inherits `public`/`internal`/`fileprivate`/`private`/`package` from the type
+- **Debug-only Code**: All generated fixture code is wrapped in `#if DEBUG`, ensuring no fixture code is included in release builds
 
 ## Common Development Commands
 
