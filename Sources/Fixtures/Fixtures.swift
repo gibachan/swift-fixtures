@@ -150,6 +150,14 @@ extension Array: Fixtureable where Element: Fixtureable {
   }
 }
 
+/// Built-in fixture support for `Dictionary` type where both key and value conform to `Fixtureable`.
+/// Returns a dictionary with a single entry as the default fixture value.
+extension Dictionary: Fixtureable where Key: Fixtureable, Value: Fixtureable {
+  public static var fixture: Self {
+    [Key.fixture: Value.fixture]
+  }
+}
+
 /// Built-in fixture support for `Optional` type.
 /// Returns `nil` as the default fixture value.
 extension Optional: Fixtureable {

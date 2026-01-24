@@ -70,6 +70,24 @@ final class FixturesTests: XCTestCase {
     XCTAssertNil(Bool?.fixture)
   }
 
+  func testFixtureDictionary() {
+    let stringIntDict = [String: Int].fixture
+    XCTAssertEqual(stringIntDict, ["a": 1])
+
+    let intStringDict = [Int: String].fixture
+    XCTAssertEqual(intStringDict, [1: "a"])
+
+    let stringBoolDict = [String: Bool].fixture
+    XCTAssertEqual(stringBoolDict, ["a": true])
+  }
+
+  func testFixtureCustomDictionary() {
+    let itemDict = [String: Item].fixture
+    XCTAssertEqual(itemDict.count, 1)
+    XCTAssertEqual(itemDict["a"]?.id, 1)
+    XCTAssertEqual(itemDict["a"]?.name, "a")
+  }
+
   func testFixtureCustomArray() {
     let fixtureItems = [Item].fixture
     XCTAssertEqual(fixtureItems.count, 3)
