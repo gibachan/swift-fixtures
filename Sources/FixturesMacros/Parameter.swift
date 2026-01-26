@@ -13,6 +13,9 @@ struct Parameter {
 
   /// Whether the property has a default value.
   let hasDefaultValue: Bool
+
+  /// The access modifier of the property, if any.
+  let accessModifier: DeclModifierSyntax?
 }
 
 extension Parameter {

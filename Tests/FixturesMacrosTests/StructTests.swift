@@ -688,4 +688,84 @@ final class StructTests: XCTestCase {
       macros: ["Fixture": FixtureMacro.self]
     )
   }
+
+  func testPublicStructWithPackageProperty() throws {
+    // When a public struct has a property with package access level,
+    // the generated init, FixtureBuilder, and closure method should use package
+    // to avoid exposing package types in public API.
+    // However, `static var fixture: Self` can remain public since it only exposes Self.
+    assertMacroExpansion(
+      """
+      @Fixture
+      public struct Parent {
+          package let child: String
+      }
+      """,
+      expandedSource: """
+        public struct Parent {
+            package let child: String
+        }
+
+        extension Parent: Fixtureable {
+            #if DEBUG
+            package init(fixturechild: String) {
+                child = fixturechild
+            }
+            public static var fixture: Self {
+                .init(fixturechild: .fixture)
+            }
+            package struct FixtureBuilder {
+                package var child: String = .fixture
+                package init() {
+                }
+            }
+            package static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturechild: builder.child)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPublicStructWithPrivateProperty() throws {
+    // When a public struct has a property with private access level,
+    // the generated init, FixtureBuilder, and closure method should use private.
+    assertMacroExpansion(
+      """
+      @Fixture
+      public struct Container {
+          private let value: Int
+      }
+      """,
+      expandedSource: """
+        public struct Container {
+            private let value: Int
+        }
+
+        extension Container: Fixtureable {
+            #if DEBUG
+            private init(fixturevalue: Int) {
+                value = fixturevalue
+            }
+            public static var fixture: Self {
+                .init(fixturevalue: .fixture)
+            }
+            private struct FixtureBuilder {
+                private var value: Int = .fixture
+            }
+            private static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturevalue: builder.value)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
 }
