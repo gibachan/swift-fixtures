@@ -386,6 +386,10 @@ final class StructTests: XCTestCase {
   }
 
   func testPublicStruct() throws {
+    // When a public struct has properties without explicit access modifiers,
+    // those properties are implicitly internal. The generated init, FixtureBuilder,
+    // and closure method use internal (no modifier) to avoid potentially exposing
+    // internal types. The static var fixture remains public for protocol conformance.
     assertMacroExpansion(
       """
       @Fixture
@@ -400,18 +404,16 @@ final class StructTests: XCTestCase {
 
         extension User: Fixtureable {
             #if DEBUG
-            public init(fixturename: String) {
+            init(fixturename: String) {
                 name = fixturename
             }
             public static var fixture: Self {
                 .init(fixturename: .fixture)
             }
-            public struct FixtureBuilder {
-                public var name: String = .fixture
-                public init() {
-                }
+            struct FixtureBuilder {
+                var name: String = .fixture
             }
-            public static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixturename: builder.name)
@@ -496,6 +498,10 @@ final class StructTests: XCTestCase {
   }
 
   func testPackageStruct() throws {
+    // When a package struct has properties without explicit access modifiers,
+    // those properties are implicitly internal. The generated init, FixtureBuilder,
+    // and closure method use internal (no modifier) to avoid potentially exposing
+    // internal types. The static var fixture remains package for protocol conformance.
     assertMacroExpansion(
       """
       @Fixture
@@ -510,18 +516,16 @@ final class StructTests: XCTestCase {
 
         extension Config: Fixtureable {
             #if DEBUG
-            package init(fixturetimeout: Int) {
+            init(fixturetimeout: Int) {
                 timeout = fixturetimeout
             }
             package static var fixture: Self {
                 .init(fixturetimeout: .fixture)
             }
-            package struct FixtureBuilder {
-                package var timeout: Int = .fixture
-                package init() {
-                }
+            struct FixtureBuilder {
+                var timeout: Int = .fixture
             }
-            package static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixturetimeout: builder.timeout)
@@ -681,6 +685,126 @@ final class StructTests: XCTestCase {
                 var builder = FixtureBuilder()
                 configure(&builder)
                 return .init(fixtureid: builder.id)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPublicStructWithPackageProperty() throws {
+    // When a public struct has a property with package access level,
+    // the generated init, FixtureBuilder, and closure method should use package
+    // to avoid exposing package types in public API.
+    // However, `static var fixture: Self` can remain public since it only exposes Self.
+    assertMacroExpansion(
+      """
+      @Fixture
+      public struct Parent {
+          package let child: String
+      }
+      """,
+      expandedSource: """
+        public struct Parent {
+            package let child: String
+        }
+
+        extension Parent: Fixtureable {
+            #if DEBUG
+            package init(fixturechild: String) {
+                child = fixturechild
+            }
+            public static var fixture: Self {
+                .init(fixturechild: .fixture)
+            }
+            package struct FixtureBuilder {
+                package var child: String = .fixture
+                package init() {
+                }
+            }
+            package static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturechild: builder.child)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPublicStructWithPrivateProperty() throws {
+    // When a public struct has a property with private access level,
+    // the generated init, FixtureBuilder, and closure method should use private.
+    assertMacroExpansion(
+      """
+      @Fixture
+      public struct Container {
+          private let value: Int
+      }
+      """,
+      expandedSource: """
+        public struct Container {
+            private let value: Int
+        }
+
+        extension Container: Fixtureable {
+            #if DEBUG
+            private init(fixturevalue: Int) {
+                value = fixturevalue
+            }
+            public static var fixture: Self {
+                .init(fixturevalue: .fixture)
+            }
+            private struct FixtureBuilder {
+                private var value: Int = .fixture
+            }
+            private static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturevalue: builder.value)
+            }
+            #endif
+        }
+        """,
+      macros: ["Fixture": FixtureMacro.self]
+    )
+  }
+
+  func testPublicStructWithImplicitInternalProperty() throws {
+    // When a public struct has a property with no explicit access modifier,
+    // that property is implicitly internal. The generated init, FixtureBuilder,
+    // and closure method should use internal (no modifier) to avoid exposing
+    // internal types in public API.
+    assertMacroExpansion(
+      """
+      @Fixture
+      public struct Container {
+          let value: String
+      }
+      """,
+      expandedSource: """
+        public struct Container {
+            let value: String
+        }
+
+        extension Container: Fixtureable {
+            #if DEBUG
+            init(fixturevalue: String) {
+                value = fixturevalue
+            }
+            public static var fixture: Self {
+                .init(fixturevalue: .fixture)
+            }
+            struct FixtureBuilder {
+                var value: String = .fixture
+            }
+            static func fixture(_ configure: (inout FixtureBuilder) -> Void) -> Self {
+                var builder = FixtureBuilder()
+                configure(&builder)
+                return .init(fixturevalue: builder.value)
             }
             #endif
         }

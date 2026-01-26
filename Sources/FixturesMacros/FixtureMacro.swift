@@ -173,12 +173,23 @@ extension FixtureMacro {
     type: some TypeSyntaxProtocol
   ) -> ExtensionDeclSyntax {
     let parameters = extractParameters(from: decl)
-    let accessModifier = extractAccessModifier(from: decl)
+    let typeAccessModifier = extractAccessModifier(from: decl)
+    // Compute effective access level considering property access modifiers
+    // This ensures we don't expose types with more restrictive access levels
+    let effectiveAccessModifier = computeEffectiveAccessModifier(
+      typeAccessModifier: typeAccessModifier,
+      parameters: parameters
+    )
+    // Note: `static var fixture: Self` uses the type's access modifier because
+    // its signature only exposes `Self`, not internal property types.
+    // This allows it to satisfy the Fixtureable protocol requirement.
+    // Other members (init, FixtureBuilder, closure method) use the effective
+    // access modifier because they expose property types in their signatures.
     let members = [
-      MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: accessModifier)),
-      MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: accessModifier)),
-      MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: accessModifier)),
-      MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: accessModifier)),
+      MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: effectiveAccessModifier)),
+      MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: typeAccessModifier)),
+      MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: effectiveAccessModifier)),
+      MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: effectiveAccessModifier)),
     ]
     return createExtension(type: type, members: members)
   }
@@ -220,7 +231,7 @@ extension FixtureMacro {
 
     var modifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
     modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
 
@@ -255,16 +266,72 @@ extension FixtureMacro {
 // MARK: - Access Modifier Helper
 
 extension FixtureMacro {
+  /// Access level ranking from most restrictive (0) to least restrictive (4).
+  /// Used to determine the effective access level for generated code.
+  fileprivate static let accessLevelRank: [Keyword: Int] = [
+    .private: 0,
+    .fileprivate: 1,
+    .internal: 2,
+    .package: 3,
+    .public: 4,
+  ]
+
+  /// Extracts access modifier from a syntax node.
   fileprivate static func extractAccessModifier(
-    from declaration: some DeclGroupSyntax
+    from node: some WithModifiersSyntax
   ) -> DeclModifierSyntax? {
     let accessKeywords: [Keyword] = [.public, .internal, .fileprivate, .private, .package]
-    return declaration.modifiers.first { modifier in
+    return node.modifiers.first { modifier in
       guard case .keyword(let keyword) = modifier.name.tokenKind else {
         return false
       }
       return accessKeywords.contains(keyword)
     }
+  }
+
+  /// Computes the effective access modifier by taking the most restrictive
+  /// between the type's access level and all properties' access levels.
+  ///
+  /// This ensures generated code doesn't expose types with more restrictive
+  /// access levels than the generated members.
+  fileprivate static func computeEffectiveAccessModifier(
+    typeAccessModifier: DeclModifierSyntax?,
+    parameters: [Parameter]
+  ) -> DeclModifierSyntax? {
+    // Get the rank of the type's access level (default to internal = 2)
+    let typeRank: Int
+    if let typeModifier = typeAccessModifier,
+      case .keyword(let keyword) = typeModifier.name.tokenKind,
+      let rank = accessLevelRank[keyword]
+    {
+      typeRank = rank
+    } else {
+      typeRank = accessLevelRank[.internal]!
+    }
+
+    // Find the minimum rank among all properties
+    var minRank = typeRank
+    var minModifier = typeAccessModifier
+
+    for param in parameters {
+      let propRank: Int
+      if let modifier = param.accessModifier,
+        case .keyword(let keyword) = modifier.name.tokenKind,
+        let rank = accessLevelRank[keyword]
+      {
+        propRank = rank
+      } else {
+        // Properties without an explicit access modifier default to internal.
+        propRank = accessLevelRank[.internal]!
+      }
+
+      if propRank < minRank {
+        minRank = propRank
+        minModifier = param.accessModifier
+      }
+    }
+
+    return minModifier
   }
 }
 
@@ -331,6 +398,9 @@ extension FixtureMacro {
         return [Parameter]()
       }
 
+      // Extract the access modifier for this property
+      let propertyAccessModifier = extractAccessModifier(from: variable)
+
       return variable.bindings.compactMap { patternBinding in
         guard let identifierPattern = patternBinding.pattern.as(IdentifierPatternSyntax.self) else {
           return nil
@@ -354,7 +424,8 @@ extension FixtureMacro {
         return Parameter(
           identifier: identifierPattern.identifier.trimmed,
           type: typeAnnotation.type.trimmed,
-          hasDefaultValue: hasDefaultValue
+          hasDefaultValue: hasDefaultValue,
+          accessModifier: propertyAccessModifier
         )
       }
     }
@@ -386,7 +457,7 @@ extension FixtureMacro {
 
     var modifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
 
     return InitializerDeclSyntax(
@@ -425,7 +496,7 @@ extension FixtureMacro {
 
     var modifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
     modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
 
@@ -472,7 +543,7 @@ extension FixtureMacro {
   ) -> StructDeclSyntax {
     var propertyModifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      propertyModifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      propertyModifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
 
     let properties = parameters.map { parameter in
@@ -495,7 +566,7 @@ extension FixtureMacro {
 
     var structModifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      structModifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      structModifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
 
     // Check if explicit init is needed (for public/package access levels)
@@ -555,7 +626,7 @@ extension FixtureMacro {
 
     var modifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name))
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
     modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
 
