@@ -326,17 +326,21 @@ extension FixtureMacro {
     var minModifier = typeAccessModifier
 
     for param in parameters {
-      if let propModifier = param.accessModifier,
-        case .keyword(let keyword) = propModifier.name.tokenKind,
+      let propRank: Int
+      if let modifier = param.accessModifier,
+        case .keyword(let keyword) = modifier.name.tokenKind,
         let rank = accessLevelRank[keyword]
       {
-        if rank < minRank {
-          minRank = rank
-          minModifier = propModifier
-        }
+        propRank = rank
+      } else {
+        // Properties without an explicit access modifier default to internal.
+        propRank = accessLevelRank[.internal]!
       }
-      // Properties without explicit access modifier inherit from the type,
-      // so we don't need to consider them
+
+      if propRank < minRank {
+        minRank = propRank
+        minModifier = param.accessModifier
+      }
     }
 
     return minModifier
