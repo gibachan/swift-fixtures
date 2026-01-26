@@ -276,24 +276,12 @@ extension FixtureMacro {
     .public: 4,
   ]
 
+  /// Extracts access modifier from a syntax node.
   fileprivate static func extractAccessModifier(
-    from declaration: some DeclGroupSyntax
+    from node: some WithModifiersSyntax
   ) -> DeclModifierSyntax? {
     let accessKeywords: [Keyword] = [.public, .internal, .fileprivate, .private, .package]
-    return declaration.modifiers.first { modifier in
-      guard case .keyword(let keyword) = modifier.name.tokenKind else {
-        return false
-      }
-      return accessKeywords.contains(keyword)
-    }
-  }
-
-  /// Extracts access modifier from a variable declaration.
-  fileprivate static func extractAccessModifier(
-    from variable: VariableDeclSyntax
-  ) -> DeclModifierSyntax? {
-    let accessKeywords: [Keyword] = [.public, .internal, .fileprivate, .private, .package]
-    return variable.modifiers.first { modifier in
+    return node.modifiers.first { modifier in
       guard case .keyword(let keyword) = modifier.name.tokenKind else {
         return false
       }
