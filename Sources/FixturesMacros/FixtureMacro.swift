@@ -191,12 +191,15 @@ extension FixtureMacro {
     // This allows it to satisfy the Fixtureable protocol requirement.
     // Other members (init, FixtureBuilder, closure method) use the effective
     // access modifier because they expose property types in their signatures.
-    let members = [
-      MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: effectiveAccessModifier)),
-      MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: typeAccessModifier)),
-      MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: effectiveAccessModifier)),
-      MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: effectiveAccessModifier)),
-    ]
+    var members: [MemberBlockItemSyntax] = []
+    // Only generate init for structs with parameters.
+    // Empty structs already have a synthesized init() which would conflict.
+    if !parameters.isEmpty {
+      members.append(MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: effectiveAccessModifier)))
+    }
+    members.append(MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: typeAccessModifier)))
+    members.append(MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: effectiveAccessModifier)))
+    members.append(MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: effectiveAccessModifier)))
     return createExtension(type: type, members: members)
   }
 
