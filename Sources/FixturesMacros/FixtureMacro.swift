@@ -86,10 +86,13 @@ public struct FixtureMacro: ExtensionMacro {
     conformingTo protocols: [TypeSyntax],
     in context: some MacroExpansionContext
   ) throws -> [ExtensionDeclSyntax] {
+    // Extract access modifier from enclosing extension if present
+    let enclosingAccessModifier = extractEnclosingAccessModifier(from: context)
+
     if let structDecl = declaration.as(StructDeclSyntax.self) {
-      return [processStruct(decl: structDecl, type: type)]
+      return [processStruct(decl: structDecl, type: type, enclosingAccessModifier: enclosingAccessModifier)]
     } else if let enumDecl = declaration.as(EnumDeclSyntax.self) {
-      if let extensionDecl = processEnum(node: node, decl: enumDecl, type: type, context: context) {
+      if let extensionDecl = processEnum(node: node, decl: enumDecl, type: type, context: context, enclosingAccessModifier: enclosingAccessModifier) {
         return [extensionDecl]
       }
       return []
@@ -167,13 +170,16 @@ extension FixtureMacro {
   /// - Parameters:
   ///   - decl: The struct declaration syntax to process
   ///   - type: The type syntax for the struct
+  ///   - enclosingAccessModifier: Access modifier from the enclosing extension, if any
   /// - Returns: Extension declaration providing fixture functionality
   fileprivate static func processStruct(
     decl: StructDeclSyntax,
-    type: some TypeSyntaxProtocol
+    type: some TypeSyntaxProtocol,
+    enclosingAccessModifier: DeclModifierSyntax?
   ) -> ExtensionDeclSyntax {
     let parameters = extractParameters(from: decl)
-    let typeAccessModifier = extractAccessModifier(from: decl)
+    // Use the type's explicit access modifier, or fall back to enclosing extension's modifier
+    let typeAccessModifier = extractAccessModifier(from: decl) ?? enclosingAccessModifier
     // Compute effective access level considering property access modifiers
     // This ensures we don't expose types with more restrictive access levels
     let effectiveAccessModifier = computeEffectiveAccessModifier(
@@ -185,12 +191,15 @@ extension FixtureMacro {
     // This allows it to satisfy the Fixtureable protocol requirement.
     // Other members (init, FixtureBuilder, closure method) use the effective
     // access modifier because they expose property types in their signatures.
-    let members = [
-      MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: effectiveAccessModifier)),
-      MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: typeAccessModifier)),
-      MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: effectiveAccessModifier)),
-      MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: effectiveAccessModifier)),
-    ]
+    var members: [MemberBlockItemSyntax] = []
+    // Only generate init for structs with parameters.
+    // Empty structs already have a synthesized init() which would conflict.
+    if !parameters.isEmpty {
+      members.append(MemberBlockItemSyntax(decl: createFixtureInitializer(for: parameters, accessModifier: effectiveAccessModifier)))
+    }
+    members.append(MemberBlockItemSyntax(decl: createStaticFixtureProperty(for: parameters, accessModifier: typeAccessModifier)))
+    members.append(MemberBlockItemSyntax(decl: createFixtureBuilderStruct(for: parameters, accessModifier: effectiveAccessModifier)))
+    members.append(MemberBlockItemSyntax(decl: createClosureBasedFixtureMethod(for: parameters, accessModifier: effectiveAccessModifier)))
     return createExtension(type: type, members: members)
   }
 
@@ -206,12 +215,14 @@ extension FixtureMacro {
   ///   - decl: The enum declaration syntax to process
   ///   - type: The type syntax for the enum
   ///   - context: The macro expansion context for diagnostics
+  ///   - enclosingAccessModifier: Access modifier from the enclosing extension, if any
   /// - Returns: Extension declaration providing fixture functionality, or nil if no cases
   fileprivate static func processEnum(
     node: AttributeSyntax,
     decl: EnumDeclSyntax,
     type: some TypeSyntaxProtocol,
-    context: some MacroExpansionContext
+    context: some MacroExpansionContext,
+    enclosingAccessModifier: DeclModifierSyntax?
   ) -> ExtensionDeclSyntax? {
     let enumCaseDecls = decl.memberBlock.members.compactMap { $0.decl.as(EnumCaseDeclSyntax.self) }
     let enumCaseElements = enumCaseDecls.flatMap { $0.elements }
@@ -227,7 +238,8 @@ extension FixtureMacro {
     }
 
     let mockExpression = createEnumCaseFixtureExpression(for: firstEnumCase)
-    let accessModifier = extractAccessModifier(from: decl)
+    // Use the type's explicit access modifier, or fall back to enclosing extension's modifier
+    let accessModifier = extractAccessModifier(from: decl) ?? enclosingAccessModifier
 
     var modifiers: [DeclModifierSyntax] = []
     if let accessModifier = accessModifier {
@@ -266,6 +278,22 @@ extension FixtureMacro {
 // MARK: - Access Modifier Helper
 
 extension FixtureMacro {
+  /// Extracts access modifier from the enclosing lexical context (e.g., extension).
+  ///
+  /// When a type is defined inside an extension with an access modifier like
+  /// `package extension Parent { struct Child { } }`, this function extracts
+  /// that access modifier so generated code can match the effective access level.
+  fileprivate static func extractEnclosingAccessModifier(
+    from context: some MacroExpansionContext
+  ) -> DeclModifierSyntax? {
+    for lexicalContext in context.lexicalContext {
+      if let extensionDecl = lexicalContext.as(ExtensionDeclSyntax.self) {
+        return extractAccessModifier(from: extensionDecl)
+      }
+    }
+    return nil
+  }
+
   /// Access level ranking from most restrictive (0) to least restrictive (4).
   /// Used to determine the effective access level for generated code.
   fileprivate static let accessLevelRank: [Keyword: Int] = [

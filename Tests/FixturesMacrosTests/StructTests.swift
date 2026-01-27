@@ -216,8 +216,6 @@ final class StructTests: XCTestCase {
 
         extension Counter: Fixtureable {
             #if DEBUG
-            init() {
-            }
             static var fixture: Self {
                 .init()
             }
