@@ -522,15 +522,11 @@ extension FixtureMacro {
       modifiers: buildModifiers(accessModifier: accessModifier),
       signature: FunctionSignatureSyntax(
         parameterClause: FunctionParameterClauseSyntax(
-          parametersBuilder: {
-            functionParameters.map { $0 }
-          }
+          parametersBuilder: { functionParameters }
         )
       ),
       body: CodeBlockSyntax(
-        statements: CodeBlockItemListSyntax(itemsBuilder: {
-          assignments.map { $0 }
-        })
+        statements: CodeBlockItemListSyntax(itemsBuilder: { assignments })
       )
     )
   }
