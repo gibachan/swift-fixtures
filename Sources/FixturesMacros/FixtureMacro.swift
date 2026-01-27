@@ -241,16 +241,10 @@ extension FixtureMacro {
     // Use the type's explicit access modifier, or fall back to enclosing extension's modifier
     let accessModifier = extractAccessModifier(from: decl) ?? enclosingAccessModifier
 
-    var modifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
-    }
-    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
-
     let members = [
       MemberBlockItemSyntax(
         decl: VariableDeclSyntax(
-          modifiers: DeclModifierListSyntax(modifiers),
+          modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
           bindingSpecifier: .keyword(.var),
           bindings: PatternBindingListSyntax {
             PatternBindingSyntax(
@@ -272,6 +266,33 @@ extension FixtureMacro {
     ]
 
     return createExtension(type: type, members: members)
+  }
+}
+
+// MARK: - Modifier Helpers
+
+extension FixtureMacro {
+  /// Creates a DeclModifierListSyntax with optional access modifier and static keyword.
+  ///
+  /// This helper centralizes modifier list construction to reduce code duplication
+  /// across multiple code generation methods.
+  ///
+  /// - Parameters:
+  ///   - accessModifier: Optional access modifier (public, internal, etc.)
+  ///   - includeStatic: Whether to include the `static` keyword
+  /// - Returns: A modifier list suitable for declaration syntax nodes
+  fileprivate static func buildModifiers(
+    accessModifier: DeclModifierSyntax?,
+    includeStatic: Bool = false
+  ) -> DeclModifierListSyntax {
+    var modifiers: [DeclModifierSyntax] = []
+    if let accessModifier = accessModifier {
+      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
+    }
+    if includeStatic {
+      modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
+    }
+    return DeclModifierListSyntax(modifiers)
   }
 }
 
@@ -483,13 +504,8 @@ extension FixtureMacro {
         })
     }
 
-    var modifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
-    }
-
     return InitializerDeclSyntax(
-      modifiers: DeclModifierListSyntax(modifiers),
+      modifiers: buildModifiers(accessModifier: accessModifier),
       signature: FunctionSignatureSyntax(
         parameterClause: FunctionParameterClauseSyntax(
           parametersBuilder: {
@@ -522,14 +538,8 @@ extension FixtureMacro {
         )
       }
 
-    var modifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
-    }
-    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
-
     return VariableDeclSyntax(
-      modifiers: DeclModifierListSyntax(modifiers),
+      modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
       bindingSpecifier: .keyword(.var),
       bindings: PatternBindingListSyntax {
         PatternBindingSyntax(
@@ -569,15 +579,12 @@ extension FixtureMacro {
     for parameters: [Parameter],
     accessModifier: DeclModifierSyntax?
   ) -> StructDeclSyntax {
-    var propertyModifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      propertyModifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
-    }
+    let propertyModifiers = buildModifiers(accessModifier: accessModifier)
 
     let properties = parameters.map { parameter in
       MemberBlockItemSyntax(
         decl: VariableDeclSyntax(
-          modifiers: DeclModifierListSyntax(propertyModifiers),
+          modifiers: propertyModifiers,
           bindingSpecifier: .keyword(.var),
           bindings: PatternBindingListSyntax {
             PatternBindingSyntax(
@@ -590,11 +597,6 @@ extension FixtureMacro {
           }
         )
       )
-    }
-
-    var structModifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      structModifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
     }
 
     // Check if explicit init is needed (for public/package access levels)
@@ -610,7 +612,7 @@ extension FixtureMacro {
     }()
 
     return StructDeclSyntax(
-      modifiers: DeclModifierListSyntax(structModifiers),
+      modifiers: buildModifiers(accessModifier: accessModifier),
       name: .identifier("FixtureBuilder"),
       memberBlock: MemberBlockSyntax(
         members: MemberBlockItemListSyntax {
@@ -620,7 +622,7 @@ extension FixtureMacro {
           if needsExplicitInit {
             MemberBlockItemSyntax(
               decl: InitializerDeclSyntax(
-                modifiers: DeclModifierListSyntax(propertyModifiers),
+                modifiers: propertyModifiers,
                 signature: FunctionSignatureSyntax(
                   parameterClause: FunctionParameterClauseSyntax(
                     parameters: FunctionParameterListSyntax {}
@@ -652,14 +654,8 @@ extension FixtureMacro {
       )
     }
 
-    var modifiers: [DeclModifierSyntax] = []
-    if let accessModifier = accessModifier {
-      modifiers.append(DeclModifierSyntax(name: accessModifier.name.trimmed))
-    }
-    modifiers.append(DeclModifierSyntax(name: .keyword(.static)))
-
     return FunctionDeclSyntax(
-      modifiers: DeclModifierListSyntax(modifiers),
+      modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
       name: .identifier("fixture"),
       signature: FunctionSignatureSyntax(
         parameterClause: FunctionParameterClauseSyntax(
