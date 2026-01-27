@@ -237,31 +237,13 @@ extension FixtureMacro {
       return nil
     }
 
-    let mockExpression = createEnumCaseFixtureExpression(for: firstEnumCase)
+    let fixtureExpression = createEnumCaseFixtureExpression(for: firstEnumCase)
     // Use the type's explicit access modifier, or fall back to enclosing extension's modifier
     let accessModifier = extractAccessModifier(from: decl) ?? enclosingAccessModifier
 
     let members = [
       MemberBlockItemSyntax(
-        decl: VariableDeclSyntax(
-          modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
-          bindingSpecifier: .keyword(.var),
-          bindings: PatternBindingListSyntax {
-            PatternBindingSyntax(
-              pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
-              typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: "Self")),
-              accessorBlock: AccessorBlockSyntax(
-                accessors: AccessorBlockSyntax.Accessors(
-                  CodeBlockItemListSyntax {
-                    CodeBlockItemSyntax(
-                      item: .expr(ExprSyntax(mockExpression))
-                    )
-                  }
-                )
-              )
-            )
-          }
-        )
+        decl: createStaticFixturePropertyWithBody(accessModifier: accessModifier, body: fixtureExpression)
       )
     ]
 
@@ -272,6 +254,38 @@ extension FixtureMacro {
 // MARK: - Modifier Helpers
 
 extension FixtureMacro {
+  /// Creates a `static var fixture: Self` property with the given body expression.
+  ///
+  /// This helper centralizes the static fixture property generation to reduce code
+  /// duplication between struct and enum processing.
+  ///
+  /// - Parameters:
+  ///   - accessModifier: Optional access modifier (public, internal, etc.)
+  ///   - body: The expression to use as the property's getter body
+  /// - Returns: A VariableDeclSyntax for `static var fixture: Self { body }`
+  fileprivate static func createStaticFixturePropertyWithBody(
+    accessModifier: DeclModifierSyntax?,
+    body: ExprSyntax
+  ) -> VariableDeclSyntax {
+    VariableDeclSyntax(
+      modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
+      bindingSpecifier: .keyword(.var),
+      bindings: PatternBindingListSyntax {
+        PatternBindingSyntax(
+          pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
+          typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: "Self")),
+          accessorBlock: AccessorBlockSyntax(
+            accessors: .getter(
+              CodeBlockItemListSyntax {
+                CodeBlockItemSyntax(item: .expr(body))
+              }
+            )
+          )
+        )
+      }
+    )
+  }
+
   /// Creates a DeclModifierListSyntax with optional access modifier and static keyword.
   ///
   /// This helper centralizes modifier list construction to reduce code duplication
@@ -538,41 +552,22 @@ extension FixtureMacro {
         )
       }
 
-    return VariableDeclSyntax(
-      modifiers: buildModifiers(accessModifier: accessModifier, includeStatic: true),
-      bindingSpecifier: .keyword(.var),
-      bindings: PatternBindingListSyntax {
-        PatternBindingSyntax(
-          pattern: IdentifierPatternSyntax(identifier: .identifier(fixturePropertyName)),
-          typeAnnotation: TypeAnnotationSyntax(type: IdentifierTypeSyntax(name: "Self")),
-          accessorBlock: AccessorBlockSyntax(
-            accessors: AccessorBlockSyntax.Accessors(
-              CodeBlockItemListSyntax {
-                CodeBlockItemSyntax(
-                  item: .expr(
-                    ExprSyntax(
-                      FunctionCallExprSyntax(
-                        calledExpression: MemberAccessExprSyntax(
-                          declName: DeclReferenceExprSyntax(
-                            baseName: .keyword(.`init`)
-                          )
-                        ),
-                        leftParen: .leftParenToken(),
-                        arguments: LabeledExprListSyntax {
-                          for argument in arguments {
-                            argument
-                          }
-                        },
-                        rightParen: .rightParenToken()
-                      )
-                    ))
-                )
-              }
-            )
-          )
-        )
-      }
+    let initCall = ExprSyntax(
+      FunctionCallExprSyntax(
+        calledExpression: MemberAccessExprSyntax(
+          declName: DeclReferenceExprSyntax(baseName: .keyword(.`init`))
+        ),
+        leftParen: .leftParenToken(),
+        arguments: LabeledExprListSyntax {
+          for argument in arguments {
+            argument
+          }
+        },
+        rightParen: .rightParenToken()
+      )
     )
+
+    return createStaticFixturePropertyWithBody(accessModifier: accessModifier, body: initCall)
   }
 
   fileprivate static func createFixtureBuilderStruct(
