@@ -10,7 +10,7 @@ Add the Fixtures library to your project's `Package.swift` file:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/gibachan/swift-fixtures", from: "0.3.0")
+    .package(url: "https://github.com/gibachan/swift-fixtures", from: "0.4.0")
 ]
 ```
 
