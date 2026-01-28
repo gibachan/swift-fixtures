@@ -168,10 +168,18 @@ extension Set: Fixtureable where Element: Fixtureable {
 }
 
 /// Built-in fixture support for `Optional` type.
-/// Returns `nil` as the default fixture value.
+/// Returns `nil` as the default fixture value when the wrapped type does not conform to `Fixtureable`.
 extension Optional: Fixtureable {
   public static var fixture: Self {
     nil
+  }
+}
+
+/// Built-in fixture support for `Optional` type when the wrapped type conforms to `Fixtureable`.
+/// Returns the wrapped type's fixture value instead of `nil`.
+extension Optional where Wrapped: Fixtureable {
+  public static var fixture: Self {
+    Wrapped.fixture
   }
 }
 

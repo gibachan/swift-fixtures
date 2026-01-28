@@ -65,9 +65,17 @@ final class FixturesTests: XCTestCase {
   }
 
   func testFixtureOptional() {
-    XCTAssertNil(String?.fixture)
-    XCTAssertNil(Int?.fixture)
-    XCTAssertNil(Bool?.fixture)
+    // When Wrapped conforms to Fixtureable, returns the wrapped fixture value
+    XCTAssertEqual(String?.fixture, "a")
+    XCTAssertEqual(Int?.fixture, 1)
+    XCTAssertEqual(Bool?.fixture, true)
+
+    // When Wrapped does NOT conform to Fixtureable, returns nil
+    struct NonFixtureable {
+      let value: Int
+    }
+
+    XCTAssertNil(NonFixtureable?.fixture)
   }
 
   func testFixtureDictionary() {
